@@ -21,7 +21,7 @@ Este repositorio contiene **dos tipos de contenido distintos**, y esa distinció
 | 03 — Architecture | ✔ Cerrada | Propuesta de Arquitectura v1 / v2, Plan de Implementación Fase 1 v1 / v2 |
 | 04 — UX & Functional Design | ✔ Cerrada | 3 prototipos navegables (HTML) |
 | 05 — Planning (Development Readiness Gate) | ✔ Cerrada | Sin entregable propio — confirma madurez para desarrollo (ver su phase-summary) |
-| 06 — Development | ⏳ Habilitada, sin iniciar | — |
+| 06 — Development | ⏳ En curso — Módulo 1/10, código escrito, pendiente de validación | `Fase 6 - Development/phase-summary.md`, ADR-001, ADR-002; código en repositorio separado `sistema-gestion-bibliotecaria/` |
 | 07 — Quality Assurance | Pendiente | — |
 | 08 — Deployment | Pendiente | — |
 | 09 — Operations | Pendiente | — |
@@ -44,8 +44,4 @@ Para el detalle completo, ver `Fase 3 - Architecture/entregables/propuesta-arqui
 ## Historial de revisiones de consistencia
 
 - [`handoff/CONSISTENCY-REVIEW-001.md`](handoff/CONSISTENCY-REVIEW-001.md) — reconstrucción inicial de contexto; detectó la ausencia de los entregables sustantivos (hallazgo H-C5, bloqueante).
-- [`handoff/CONSISTENCY-REVIEW-002.md`](handoff/CONSISTENCY-REVIEW-002.md) — incorporación de los entregables sustantivos aprobados; verificación cruzada; determinación de Single Source of Truth.
-
-## Estado y próximo paso
-
-Ver [`handoff/PROJECT_HANDOFF.md`](handoff/PROJECT_HANDOFF.md).
+- [`handoff/CONSISTENCY-REVIEW-002.md`](handoff/CONSISTENCY-REVIEW-002.md) — incorporación de los entregables sustantivos apr
