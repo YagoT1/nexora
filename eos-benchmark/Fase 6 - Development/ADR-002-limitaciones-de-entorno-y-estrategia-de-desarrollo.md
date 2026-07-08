@@ -46,3 +46,16 @@ Por la limitación (5), el repositorio `sistema-gestion-bibliotecaria/` **no se 
 ## Seguimiento
 
 Este hallazgo **no requiere decisión institucional** conforme a los criterios ya establecidos (no es un bloqueo que impida alcanzar los criterios de aceptación del módulo — solo difiere el momento en que se verifican, de "durante la escritura" a "antes del primer despliegue a staging"). Se informa a la Comisión Directiva por transparencia, sin solicitar acción de su parte.
+
+---
+
+## Actualización (2026-07-08) — Verificación exhaustiva de alternativas dentro de esta sesión
+
+Ante la autorización de la Comisión Directiva para trasladar la validación del Módulo 1 "al entorno técnico que el equipo considere adecuado", se investigó activamente si existía alguna alternativa **dentro de esta misma sesión de Cowork** antes de descartar esa opción. Se verificó concretamente:
+
+1. **Runtime PHP real vía WebAssembly (`@php-wasm/cli`, proyecto usado por WordPress Playground):** paquete disponible en el registro de npm (accesible desde este entorno). Es un PHP genuino compilado a WASM, no una simulación — habría permitido ejecutar PHP 8.2/8.3 real sin necesidad de `apt`/root.
+2. **Acceso de red a los repositorios de paquetes PHP necesarios para Composer:** se probó `packagist.org`, `repo.packagist.org`, `getcomposer.org`, `codeload.github.com`, `api.github.com` y `raw.githubusercontent.com`. **Todos bloqueados por el proxy de salida** (`403 blocked-by-allowlist` o `403` genérico), incluso cuando el dominio raíz `github.com` sí responde (200). Solo `registry.npmjs.org` (ecosistema Node, no PHP) resultó accesible.
+
+**Conclusión de la verificación:** el bloqueo no es la ausencia de un runtime PHP — eso tiene solución dentro de esta sesión (punto 1). El bloqueo real e insalvable dentro de esta sesión es que **Composer no tiene ningún camino de red disponible para descargar el framework Laravel ni sus dependencias**, sin importar qué intérprete PHP se use. Esto es una restricción de infraestructura del sandbox de Cowork, no del proyecto ni del código entregado.
+
+**Decisión:** se descarta definitivamente ejecutar la validación del Módulo 1 dentro de esta sesión de Cowork, en cualquier configuración. La validación real (`composer install && php artisan migrate && php artisan test`, conforme a `docs/BOOTSTRAP.md`) debe ejecutarse en un entorno con acceso de red sin restricciones al ecosistema Composer/Packagist — por ejemplo, la máquina de un desarrollador, un runner de CI/CD (GitHub Actions u otro), o un entorno de nube provisionado para tal fin. Esto no es una tarea que el equipo pueda seguir intentando resolver por sí mismo dentro de este entorno; se informa a la Comisión Directiva como cierre de esta línea de investigación, no como bloqueo pendiente de decisión institucional.
