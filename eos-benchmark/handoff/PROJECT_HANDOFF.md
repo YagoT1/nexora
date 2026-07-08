@@ -51,25 +51,6 @@ Todos los entregables fueron aprobados por la Comisión Directiva.
 
 ## Próximo trabajo
 
-Iniciar Module 1 conforme al Plan de Implementación aprobado.
+**Actualizado 2026-07-08 (Consistency Review 001):** Antes de iniciar Module 1 se ejecutó la reconstrucción de contexto y verificación de consistencia instruida por la Comisión Directiva. Se detectó un bloqueo: el contenido técnico sustantivo de los entregables (Requisitos v2, Modelo de Dominio v2, Propuesta de Arquitectura v2, Plan de Implementación v2, wireframes) no se encuentra en este repositorio — solo las reseñas de benchmark que evalúan el proceso. Ver `handoff/CONSISTENCY-REVIEW-001.md`, hallazgo H-C5.
 
----
-
-## Fuente oficial
-
-Toda la documentación del proyecto se encuentra en este repositorio.
-
-Ante cualquier inconsistencia deberá prevalecer la documentación más reciente y documentarse el hallazgo antes de continuar.
-
----
-
-## Autonomía
-
-A partir de este punto el equipo conduce el proyecto.
-
-La Comisión Directiva únicamente intervendrá cuando:
-
-- exista una decisión institucional;
-- corresponda validar un entregable;
-- exista un bloqueo no resoluble por el equipo;
-- se presente un hito relevante.
+**Iniciar Module 1 queda en espera** hasta que la Comisión Direc
