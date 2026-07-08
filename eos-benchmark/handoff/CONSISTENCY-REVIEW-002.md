@@ -79,3 +79,18 @@ Ningún equipo nuevo necesitaría acudir a una fuente externa para reconstruir e
 Con el hallazgo H-C5 resuelto, **se levanta el bloqueo** registrado en `CONSISTENCY-REVIEW-001.md`. Se habilita formalmente el inicio de la **Phase 06 — Development**, comenzando por el Módulo 1 (Infraestructura y autenticación) según `Fase 3 - Architecture/entregables/plan-implementacion-fase1-v2.md`.
 
 Antes de escribir código de funcionalidad, corresponde ejecutar el pre-checklist técnico pendiente (creación del repositorio de código de la aplicación — distinto de `eos-benchmark`, que es documentación —, entornos de Render.com, HTTPS, cron job, variables de entorno, datos de staging), tal como exige el propio plan.
+
+---
+
+## Addendum (2026-07-08 — Fase 06 en curso): H-C10 — Desfasaje entre contenido en disco e historial de git por caché de mtime (Severidad: Media, no bloqueante, resuelto)
+
+Durante la Fase 06, al actualizar `README.md` y `handoff/PROJECT_HANDOFF.md` para reflejar el inicio del Módulo 1 (ver commit `06fea55`), se detectó que ambas ediciones quedaron correctamente escritas en disco pero **no fueron incluidas en dicho commit**. Solo se registraron los dos archivos nuevos (`ADR-002...md`, `phase-summary.md` de Fase 06); los archivos editados (no nuevos) quedaron fuera sin error visible.
+
+**Causa raíz identificada:** el motor de git en el entorno de esta sesión utiliza una optimización estándar ("racily clean") que compara `mtime` y tamaño de archivo contra la entrada del índice para decidir si necesita releer el contenido antes de calcular un diff o un `add`. Las escrituras realizadas mediante la herramienta de edición de archivos de este entorno no siempre actualizan el `mtime` de un modo que git detecte como posterior al de la entrada indexada, por lo que git asumía —incorrectamente— que el archivo no había cambiado, sin releer su contenido real. Esto se verificó de forma concluyente comparando `git hash-object` del archivo en disco contra el blob referenciado por el índice (`git ls-files -s`): los hashes diferían, confirmando contenido distinto pese a que `git diff`/`git add` reportaban "sin cambios".
+
+**Resolución adoptada:** ejecutar `touch` explícito sobre los archivos afectados antes de `git add` fuerza a git a invalidar la caché de stat y releer el contenido real. Aplicado sobre `README.md` y `PROJECT_HANDOFF.md`, esto permitió confirmar la diferencia real y capturarla en el commit `57aaf61` ("docs(eos-benchmark): actualiza README y PROJECT_HANDOFF con estado de Fase 06 en curso").
+
+**Impacto:** ninguno sobre el contenido técnico sustantivo del proyecto — el desfasaje fue exclusivamente entre el archivo en disco (correcto en todo momento) y el registro histórico de git (incompleto durante una ventana breve, ya corregida). No requiere decisión institucional.
+
+**Procedimiento adoptado para el resto de la Fase 06 (y fases siguientes) en este entorno:** antes de cualquier `git add` sobre archivos editados (no creados), ejecutar `touch` sobre las rutas afectadas y verificar con `git diff` (no solo `git status`) que el cambio es detectado antes de confiar en que un commit posterior lo va a capturar.
+
