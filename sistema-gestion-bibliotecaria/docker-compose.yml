@@ -1,0 +1,45 @@
+# Postgres 16 local para desarrollo del Módulo 1.
+#
+# Satisface el prerequisito de docs/BOOTSTRAP.md paso 1 ("PostgreSQL 16 accesible, local vía
+# Docker o instancia de staging en Render.com") y sirve como backend tanto para el servidor MCP
+# de inspección de base de datos (ver eos-benchmark/Fase 6 - Development/ADR-004) como para el
+# `php artisan migrate --seed` real una vez completado el bootstrap de Laravel.
+#
+# Uso:
+#   docker compose up -d       # levanta el contenedor
+#   docker compose down        # lo detiene (los datos persisten en el volumen 'sgb_pgdata')
+#   docker compose down -v     # lo detiene y BORRA los datos (usar solo para resetear de cero)
+#
+# Credenciales: coinciden con .env.example (DB_DATABASE=sgb, DB_USERNAME=sgb). La contraseña
+# de abajo es exclusivamente para desarrollo local (el puerto no se expone fuera de localhost
+# salvo que cambies el mapeo de puertos) — no reutilizar en staging/producción.
+#
+# Puerto 5433 (no 5432): en esta máquina había un PostgreSQL 18 nativo (servicio de Windows
+# "postgresql-x64-18") ya ocupando el 5432 — ver ADR-006, Hallazgo 3, en
+# eos-benchmark/Fase 6 - Development. Se remapea el host del contenedor para no tocar ese
+# servicio (que puede pertenecer a otro proyecto). El puerto interno del contenedor sigue
+# siendo 5432; solo cambia el lado expuesto en localhost. Ajustar DB_PORT en el .env del
+# proyecto Laravel (sgb-laravel/.env) y el DATABASE_URI del MCP de Postgres si este valor
+# cambia en tu máquina.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: sgb-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sgb
+      POSTGRES_USER: sgb
+      POSTGRES_PASSWORD: sgb_dev_local_only
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - sgb_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sgb -d sgb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sgb_pgdata:

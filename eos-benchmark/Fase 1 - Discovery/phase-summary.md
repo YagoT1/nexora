@@ -31,6 +31,8 @@ Objetivo cumplido.
 - Benchmark de Discovery
 - 6 iteraciones documentadas
 
+**Artefactos sustantivos incorporados (Consistency Review 002):** ver [`entregables/relevamiento-consolidado-v1.md`](entregables/relevamiento-consolidado-v1.md) y [`entregables/relevamiento-consolidado-v2.md`](entregables/relevamiento-consolidado-v2.md) (versión validada y cerrada por la Comisión Directiva).
+
 ---
 
 ## Riesgos

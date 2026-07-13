@@ -63,11 +63,20 @@ La escala no justifica la complejidad adicional. El sistema puede evolucionar ha
 
 | Capa | Tecnología | Versión |
 |---|---|---|
-| Backend | PHP con Laravel | 11 (PHP 8.3) |
+| Backend | PHP con Laravel | 11 (PHP 8.3) — **enmendado a Laravel 12, ver nota abajo** |
 | Frontend — interfaces internas | Blade + Alpine.js | — |
 | Frontend — portal de socios (Fase 3) | Vue.js 3 vía Inertia.js | A definir en Fase 3 |
 | Base de datos | PostgreSQL | 16 |
 | Autenticación | Laravel Breeze (sesiones) | — |
+
+> **Enmienda (2026-07-12, ver `Fase 6 - Development/ADR-007-actualizacion-laravel-11-a-12.md`):**
+> la versión de Laravel objetivo pasó de 11 a 12 al ejecutar el bootstrap del Módulo 1. Laravel 11
+> dejó de recibir parches de seguridad activos (ventana de soporte de 2 años vencida desde marzo de
+> 2026); dos vulnerabilidades reportadas en junio de 2026 (una de severidad alta) no tienen versión
+> corregida en toda la rama 11.x, solo a partir de Laravel 12.60/12.61. Se documenta como enmienda,
+> no como reescritura, para preservar la trazabilidad de la decisión original de esta propuesta.
+> PHP 8.3 sigue siendo el piso mínimo soportado por el proyecto (Laravel 12 solo exige PHP 8.2); el
+> entorno real validado usa PHP 8.5.8.
 
 **Justificación de Laravel (PHP):**
 Laravel es el framework web más utilizado en Argentina para desarrollo institucional. Desarrolladores familiarizados con él son abundantes en el mercado local, lo que resuelve directamente la restricción de continuidad por nuevo proveedor. Es un framework con "todo incluido": ORM robusto, migraciones de base de datos, autenticación, validación, sesiones, cola de tareas y programador de tareas. Tiene más de doce años en producción activa con respaldo institucional sólido.

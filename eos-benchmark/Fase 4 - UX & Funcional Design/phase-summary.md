@@ -31,6 +31,8 @@ Objetivo cumplido. Se optó deliberadamente por no producir documentación funci
 - 3 prototipos navegables adicionales (circulación, administración, configuración) — iteración 013.
 - Un cuarto prototipo complementario, tras detectar 4 gaps funcionales en la revisión — iteración 014.
 
+**Artefactos sustantivos incorporados (Consistency Review 002):** ver [`entregables/prototipo-01-mostrador.html`](entregables/prototipo-01-mostrador.html), [`entregables/prototipo-02-flujos-secundarios.html`](entregables/prototipo-02-flujos-secundarios.html) (iteración 013) y [`entregables/prototipo-03-gaps-funcionales.html`](entregables/prototipo-03-gaps-funcionales.html) (iteración 014, prototipo complementario).
+
 ---
 
 ## Riesgos mitigados

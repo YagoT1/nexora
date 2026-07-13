@@ -36,6 +36,8 @@ El dominio fue construido, revisado y fortalecido mediante una auditoría intern
 - Validación del dominio.
 - Benchmark de Domain Modeling.
 
+**Artefactos sustantivos incorporados (Consistency Review 002):** ver [`entregables/modelo-de-dominio-v1.md`](entregables/modelo-de-dominio-v1.md) y [`entregables/modelo-de-dominio-v2.md`](entregables/modelo-de-dominio-v2.md) (21 reglas de negocio, versión final para validación de la Comisión Directiva).
+
 ---
 
 ## Riesgos Mitigados

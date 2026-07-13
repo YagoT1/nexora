@@ -33,6 +33,10 @@ Objetivo cumplido. La fase incorporó, en una única carpeta, cuatro hitos disti
 - Plan de Implementación v1: módulos, dependencias y criterios de aceptación (iteración 011).
 - 8 wireframes de los flujos operativos principales (iteración 012).
 
+**Artefactos sustantivos incorporados (Consistency Review 002):** ver [`entregables/propuesta-arquitectura-v1.md`](entregables/propuesta-arquitectura-v1.md), [`entregables/propuesta-arquitectura-v2.md`](entregables/propuesta-arquitectura-v2.md) (stack: Laravel 11 + Blade/Alpine.js + PostgreSQL 16 + Render.com), [`entregables/plan-implementacion-fase1-v1.md`](entregables/plan-implementacion-fase1-v1.md) y [`entregables/plan-implementacion-fase1-v2.md`](entregables/plan-implementacion-fase1-v2.md) (10 módulos con criterios de aceptación verificables).
+
+**Nota de completitud:** los 8 wireframes originales de la iteración 012 no se conservaron como archivos independientes; solo se incorporaron los prototipos producidos durante la Fase 04 (ver hallazgo H-C6 en Consistency Review 002).
+
 ---
 
 ## Riesgos mitigados

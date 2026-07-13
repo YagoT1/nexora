@@ -36,3 +36,11 @@ Esta decisión es consistente con DA-02 (un único repositorio de código para e
 
 - El código del Módulo 1 se desarrolla y versiona localmente desde ahora, sin bloquear el trabajo a la espera de la creación del repositorio remoto.
 - La trazabilidad del proyecto queda distribuida en dos repositorios con propósitos distintos y claramente documentados: `eos-benchmark` (documentación) y `sistema-gestion-bibliotecaria` (código). El `README.md` de `eos-benchmark` se actualiza para referenciar esta decisión.
+
+> **Enmienda (2026-07-13, ver `ADR-010-monorepo-nexora-como-fuente-unica.md`):** por decisión
+> institucional explícita, `sistema-gestion-bibliotecaria/` deja de ser un repositorio git
+> independiente y se integra como subcarpeta del monorepo `nexora` (el mismo repositorio que aloja
+> `eos-benchmark/`). El riesgo que motivó rechazar la alternativa A en este documento (mezclar
+> documentación con el pipeline de despliegue del código) sigue vigente y se documenta como
+> mitigación pendiente en `ADR-010` (filtrar el trigger de Render.com por path). Se preserva esta
+> decisión original sin reescribirla, por trazabilidad histórica.

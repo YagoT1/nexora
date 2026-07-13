@@ -44,4 +44,8 @@ Para el detalle completo, ver `Fase 3 - Architecture/entregables/propuesta-arqui
 ## Historial de revisiones de consistencia
 
 - [`handoff/CONSISTENCY-REVIEW-001.md`](handoff/CONSISTENCY-REVIEW-001.md) — reconstrucción inicial de contexto; detectó la ausencia de los entregables sustantivos (hallazgo H-C5, bloqueante).
-- [`handoff/CONSISTENCY-REVIEW-002.md`](handoff/CONSISTENCY-REVIEW-002.md) — incorporación de los entregables sustantivos apr
+- [`handoff/CONSISTENCY-REVIEW-002.md`](handoff/CONSISTENCY-REVIEW-002.md) — incorporación de los entregables sustantivos aprobados; verificación cruzada; determinación de Single Source of Truth.
+
+## Estado y próximo paso
+
+Ver [`handoff/PROJECT_HANDOFF.md`](handoff/PROJECT_HANDOFF.md).

@@ -472,3 +472,27 @@ Cada error descubierto aumenta la calidad de la metodología.
 El Enterprise Operating System no evoluciona mediante opiniones.
 
 Evoluciona mediante evidencia.
+
+---
+
+# Corrigendum (Consistency Review 001)
+
+La tabla de iteraciones de la Sección 11 quedó desactualizada respecto del estado real del repositorio y se corrige a continuación sin eliminar el texto original, conforme al principio de trazabilidad (Volumen V, 3.4).
+
+## Correcciones
+
+- **Iteración 006** pertenece a **Fase 1 — Discovery** ("Discovery Closure Validation"), no a Domain Modeling.
+- **Iteración 007** pertenece a **Fase 2 — Domain Modeling** ("Domain Model Validation").
+- **Iteración 008** pertenece a **Fase 2 — Domain Modeling** ("Domain Model Internal Validation"), no es "Architecture Vision" ni pertenece a Arquitectura.
+- **Iteración 009** — Fase 3 — Architecture Proposal.
+- **Iteración 010** — Fase 3 — Architecture Review.
+- **Iteración 011** — Fase 3 — Implementation Planning.
+- **Iteración 012** — Fase 3 — UX Validation (cierre de Pre-Development Engineering, primera pasada).
+
+## Iteraciones posteriores no registradas en la versión original de este volumen
+
+- **Iteración 013** — Fase 4 — UX & Functional Design.
+- **Iteración 014** — Fase 4 — Functional Review (cierre de Fase 4).
+- **Iteración 015** — Fase 5 — Planning / Development Readiness Gate (cierre de Fase 5).
+
+Estas tres iteraciones surgieron de una segunda pasada de validación funcional y de planificación, posterior al cierre inicial declarado en la iteración 012, cuando se identificó la necesidad de ampliar la cobertura de wireframes (de 8 a un total mayor) y de confirmar formalmente la preparación para el desarrollo. Ver `handoff/CONSISTENCY-REVIEW-001.md` para el detalle completo.
