@@ -115,4 +115,48 @@ de implementación recomendado por el briefing:
 - **Paso 1 (Autor, Editorial) — código escrito:** `AutorController`, `EditorialController`
   (namespace `App\Http\Controllers\Catalogo`), rutas bajo `catalogo.*` con middleware
   `role:administrador,personal` (Modelo de Dominio v2, 6.1: Voluntario no gestiona catálogo),
-  vistas Blade + Alpine siguiendo la convención de `admin.users.*`, y enlac
+  vistas Blade + Alpine siguiendo la convención de `admin.users.*`, y enlace de navegación
+  condicionado por rol en `layouts/app.blade.php`. Se agregó una salvaguarda no derivada
+  explícitamente de una RN/DA (mismo patrón que `ADR-003` para Módulo 1): no se permite eliminar
+  un Autor o Editorial que tenga Libros asociados, para no dejar relaciones M:N/1:N rotas.
+- **Paso 2 (Categoría) — código escrito:** `CategoriaController` + `CategoriaRequest` (FormRequest
+  reutilizable entre alta y edición, mitigando el riesgo R-3 del briefing). Valida profundidad
+  máxima 2 (D-06/CL-02) en ambos sentidos: la categoría padre elegida debe ser de primer nivel
+  (`Categoria::puedeSerPadre()`, criterio de aceptación explícito), y además una categoría que ya
+  tiene subcategorías propias no puede pasar a tener padre (mismo invariante, sentido inverso — no
+  cubierto literalmente por el criterio de aceptación, que solo habla de alta, pero necesario para
+  que la edición no permita lo que la creación prohíbe). La vista de edición retira la opción de
+  padre del formulario cuando no aplica, en vez de solo depender de la validación de servidor.
+  - **Hallazgo técnico corregido durante este paso (afecta también al Paso 1):** las rutas
+    `Route::resource('autores', ...)`, `('editoriales', ...)` y `('categorias', ...)` dependían
+    del singularizador automático de Laravel (`Str::singular()`, reglas en inglés) para nombrar el
+    parámetro de ruta vinculado al modelo — un mecanismo no verificable en este entorno (sin
+    PHP/Composer reales, ver `ADR-002`) y no garantizado para sustantivos en español. Se corrigió
+    fijando explícitamente el nombre de parámetro (`'parameters' => ['autores' => 'autor']`, etc.)
+    en las tres rutas, eliminando la dependencia de esa inferencia. No amerita una ADR propia: es
+    una corrección de implementación dentro del mismo trabajo en curso, sin impacto en ninguna
+    decisión de arquitectura ya aprobada.
+- **Pasos 3 a 8 (Libro, Ejemplar, búsqueda, vista de detalle, RN-21, tests): pendientes**, en ese
+  orden, conforme al plan del briefing.
+
+**No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
+código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo
+por cerrado. A diferencia de Módulo 1, esta vez ya existe un procedimiento de validación probado y
+funcionando (`docs/BOOTSTRAP.md`, `ADR-006`/`ADR-007`/`ADR-008`), por lo que el riesgo de esta
+brecha es menor y ya conocido.
+
+## Decisión
+
+Módulo 1 queda **cerrado**: código, migraciones, seeders y suite de tests completa ejecutados con
+éxito contra PHP 8.5 y PostgreSQL 16 reales (`ADR-006`/`ADR-007`/`ADR-008`), y con su historial
+consolidado en un único repositorio (`nexora`), publicado en GitHub (`ADR-009`/`ADR-010`). El único
+punto pendiente — el pre-checklist de infraestructura (punto 4) — es no bloqueante y no impide
+iniciar el Módulo 2.
+
+**Nota de gestión (2026-07-14):** ante la observación de que las últimas iteraciones se concentraron
+en instalación y validación de herramientas (MCP de Postgres, Desktop Commander MCP, incidente SSL),
+se hizo una evaluación objetiva: no existe ningún bloqueo real para el producto (Módulo 1 validado
+en verde; el pre-checklist de infraestructura no es requisito de Módulo 2), y las tareas de tooling
+pendientes (`ADR-011`, pasos 3-9 de 9) son mejoras de entorno de desarrollo, no requisitos del
+roadmap. Se decidió pausar ese tooling sin cerrarlo (queda documentado y retomable) y avanzar
+directamente con la implementación del Módulo 2 — Catálogo.
