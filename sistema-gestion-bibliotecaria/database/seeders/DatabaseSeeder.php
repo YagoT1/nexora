@@ -16,6 +16,12 @@ class DatabaseSeeder extends Seeder
      * Módulo 2 (Catálogo): CatalogoDemoSeeder agrega datos de ejemplo para la revisión funcional
      * de los Pasos 1 a 4 (Autor, Editorial, Categoría, Libro, Ejemplar) — ver
      * docs/REVISION-MODULO-2.md.
+     *
+     * Módulo 3 (Socios): SociosDemoSeeder agrega datos de ejemplo para la revisión funcional de
+     * la búsqueda tolerante a acentos y la vista de mostrador (atraso, contador de atrasos,
+     * RN-07 para socios Honorario) — ver docs/REVISION-MODULO-3.md. Corre después de
+     * CatalogoDemoSeeder porque reutiliza el mismo usuario Administrador como registrador de los
+     * préstamos de demostración.
      */
     public function run(): void
     {
@@ -24,6 +30,7 @@ class DatabaseSeeder extends Seeder
             ParametroConfiguracionSeeder::class,
             AdminUserSeeder::class,
             CatalogoDemoSeeder::class,
+            SociosDemoSeeder::class,
         ]);
     }
 }

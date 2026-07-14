@@ -7,6 +7,8 @@ use App\Http\Controllers\Catalogo\EditorialController;
 use App\Http\Controllers\Catalogo\EjemplarController;
 use App\Http\Controllers\Catalogo\LibroController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Socios\SocioController;
+use App\Http\Controllers\Socios\TipoSocioController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -69,3 +71,19 @@ Route::middleware(['auth', 'role:administrador,personal'])
     });
 // --- fin Módulo 2 (paso 1: Autor, Editorial; paso 2: Categoría; paso 3: Libro; paso 4: Ejemplar;
 // paso 5: búsqueda vía query string en 'libros.index'; paso 6: 'libros.show') ---
+
+// --- Módulo 3 (Socios) — en construcción, ver Fase 6 - Development/BRIEFING-MODULO-3-SOCIOS.md ---
+// Acceso: Administrador y Personal (Modelo de Dominio v2, 6.1: Voluntario no gestiona socios,
+// mismo criterio que Catálogo).
+Route::middleware(['auth', 'role:administrador,personal'])
+    ->prefix('socios')
+    ->name('socios.')
+    ->group(function () {
+        Route::resource('tipos-socio', TipoSocioController::class, ['parameters' => ['tipos-socio' => 'tipoSocio']]);
+        // 'show' es la vista de mostrador (Paso 5): préstamos activos, reservas activas,
+        // restricción vigente, atrasos en los últimos 12 meses e historial paginado (Paso 6). No
+        // hay 'destroy': el padrón de socios no se elimina (RN-14/DA-05, dato auditado), se
+        // inactiva editando el campo 'estado'.
+        Route::resource('socios', SocioController::class, ['except' => ['destroy'], 'parameters' => ['socios' => 'socio']]);
+    });
+// --- fin Módulo 3 (paso 1: Tipo de Socio) ---

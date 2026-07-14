@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: definir el alcance del Módulo 3 conforme al orden de dependencias de DA-08.
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **código completo, no cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) implementado conforme a `BRIEFING-MODULO-3-SOCIOS.md`, con seeder de demostración y suite de tests Feature (`tests/Feature/Socios/`, 11 tests) — todavía sin la primera ejecución real contra PHP/PostgreSQL (mismo estándar de evidencia que rigió los Módulos 1 y 2 antes de su primera corrida). Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: obtener evidencia real de `php artisan test --filter=Socios` para poder declarar cerrado el Módulo 3.
 
 ---
 
@@ -323,6 +323,80 @@ No se creó infraestructura nueva (no hay migraciones nuevas en este paso) ni se
 de configuración del entorno — es contenido de aplicación (seeder) y documentación, coherente con
 la conclusión de la revisión objetiva anterior de que el tooling de entorno ya no es prioritario.
 
+### Módulo 3 — Socios: implementación completa (2026-07-14)
+
+Con el Módulo 2 formalmente cerrado con evidencia objetiva, la Comisión Directiva otorgó autonomía
+para determinar y ejecutar el siguiente paso técnicamente correcto. Se revisó DA-08 (Socios es el
+módulo #3, sin dependencias — DA-06), el Plan de Implementación v2 y el estado real del código
+(las entidades de dominio de Socios ya existían completas desde el Módulo 1), concluyendo que no
+había ningún cambio de arquitectura, prioridad o planificación que justificar: correspondía iniciar
+Módulo 3 tal como estaba programado. Se redactó `BRIEFING-MODULO-3-SOCIOS.md` como paso previo
+obligatorio, siguiendo el mismo precedente del Módulo 2, identificando y resolviendo dentro del
+propio briefing un riesgo técnico no documentado en la arquitectura (R-1: la búsqueda tolerante a
+acentos requiere la extensión PostgreSQL `unaccent`, ausente de todo documento del proyecto hasta
+ahora).
+
+Entregado, en 7 pasos:
+
+- **Paso 1 (CRUD Tipo de Socio) — código escrito:** `TipoSocioController` (namespace
+  `App\Http\Controllers\Socios`), rutas bajo `socios.tipos-socio.*` con middleware
+  `role:administrador,personal` (Modelo de Dominio v2, 6.1: "Gestionar socios" es Administrador y
+  Personal, no Voluntario — mismo patrón que Catálogo). `destroy()` bloquea el borrado de un Tipo
+  de Socio con socios asociados, mismo criterio de guarda que Autor/Editorial/Libro en el Módulo 2.
+  Satisface D-04: el límite de préstamos simultáneos es editable desde la administración, sin
+  intervención de código.
+- **Paso 2 (CRUD Socio) — código escrito:** `SocioController`, con `nombres_alternativos`
+  gestionado como lista de texto (una línea por nombre en el formulario, convertida a array
+  `jsonb` en el modelo — R-3 del briefing).
+- **Paso 3 (Búsqueda tolerante a variaciones de nombre) — código escrito:** migración
+  `2024_01_03_000010_enable_unaccent_extension.php` (habilita la extensión `unaccent`, contrib
+  estándar de PostgreSQL 16). `SocioController::index()` compara `unaccent(nombre_principal) ILIKE
+  unaccent('%término%')`, y adicionalmente busca dentro de `nombres_alternativos` (columna `jsonb`)
+  mediante una subconsulta `jsonb_array_elements_text` con la misma normalización — cubre
+  simultáneamente nombre principal y nombres alternativos, tal como exige el criterio de
+  aceptación 2.
+- **Paso 4 (Vista de mostrador) — código escrito:** `SocioController::show()` carga préstamos
+  domiciliarios activos/atrasados, reservas activas, la primera `RestriccionSocio` vigente (si la
+  hay, vía `estaActiva()`) y el conteo de atrasos de los últimos 12 meses. La vista muestra un
+  banner de alerta si hay restricción vigente y tres tarjetas métricas (préstamos, reservas,
+  atrasos). RN-07 se respeta por construcción: un socio Honorario simplemente no tiene ninguna
+  `RestriccionSocio` asociada (ese módulo no las genera; los Módulos 4/6 sí lo harán respetando
+  `TipoSocio::sujeto_a_restriccion_automatica`), así que la consulta no encuentra ninguna que
+  mostrar — no hizo falta ninguna condición especial en la vista para el caso Honorario.
+- **Paso 5 (Historial de préstamos paginado) — código escrito:** listado paginado (15 por página,
+  parámetro de página propio `historial` para no chocar con la paginación del listado principal de
+  socios) de todos los préstamos domiciliarios del socio, ordenados por fecha descendente, incluido
+  en la misma vista de mostrador.
+- **Paso 6 (Relación faltante) — código escrito:** `Socio::reservas()` no existía en el modelo
+  desde el Módulo 1 (su inversa, `Reserva::socio()`, sí) — agregada para poder cargar las reservas
+  activas del Paso 4. Es una omisión del Módulo 1, no un cambio de arquitectura: el modelo de datos
+  ya contemplaba la relación, solo faltaba declararla en Eloquent.
+- **Paso 7 (Tests Feature del Módulo 3) — código escrito:** 4 archivos bajo
+  `tests/Feature/Socios/`, mismo patrón que Módulo 1/2 (`RefreshDatabase`, `actingAs()`, nombres de
+  método en español):
+  - `AccesoSociosTest`: control de acceso por rol a `socios.socios.index` (Voluntario bloqueado,
+    Personal/Administrador permitido, visitante redirigido a login).
+  - `TipoSocioTest`: criterio 1 (cambio de límite de 3 a 4 aplicado de inmediato, releído desde la
+    base de datos con `fresh()`, sin ningún paso de caché o reinicio intermedio) y el guard de
+    `destroy()` contra Tipos de Socio con socios asociados.
+  - `SocioTest`: alta de Socio, y criterio 2 en sus dos variantes — búsqueda "Garcia" encuentra
+    "María García" por nombre principal, y por separado encuentra un socio cuyo nombre alternativo
+    contiene "Garcia", en ambos casos excluyendo un socio no relacionado ("Juan Pérez").
+  - `VistaMostradorSocioTest`: criterio 3 (préstamo atrasado visible + contador de atrasos) y
+    criterio 4 (socio Honorario con atraso no muestra restricción vigente), este último incluyendo
+    un caso negativo explícito que verifica que una `RestriccionSocio` de otro socio no se filtra
+    incorrectamente hacia la vista del socio bajo prueba.
+- **Preparación para revisión funcional:** `SociosDemoSeeder` (nuevo, registrado en
+  `DatabaseSeeder` después de `CatalogoDemoSeeder`, de quien reutiliza el usuario Administrador
+  como registrador de los préstamos de demostración) y `docs/REVISION-MODULO-3.md` (nuevo), mismo
+  criterio que la preparación equivalente del Módulo 2: datos elegidos para ejercitar exactamente
+  los 4 criterios de aceptación, y una tabla que cruza cada uno contra cómo revisarlo manualmente.
+
+**No ejecutado en ningún entorno real todavía** (mismo motivo que todos los módulos anteriores en
+su primera entrega — `ADR-002`): este sandbox no dispone de PHP, Composer ni PostgreSQL. El primer
+checkpoint de calidad real es correr `php artisan migrate` (nueva extensión `unaccent`) y `php
+artisan test --filter=Socios` en el entorno de la Comisión Directiva.
+
 ## Decisión
 
 Módulo 1 queda **cerrado**: código, migraciones, seeders y suite de tests completa ejecutados con
@@ -354,3 +428,15 @@ assertions)`, sin fallos.** El Módulo 2 cumple el mismo estándar de cierre que
 diferido, no bloqueante: R-1 (historial de condición física por ejemplar), pendiente de una
 decisión de diseño (entidad versionada vs. sobrescritura de campo) que no corresponde tomar
 unilateralmente — ver `BRIEFING-MODULO-2-CATALOGO.md`, sección "Recomendación".
+
+**Módulo 3 — Socios: código completo, no cerrado (2026-07-14).** Los 7 pasos del plan de
+implementación recomendado por `BRIEFING-MODULO-3-SOCIOS.md` están completos: CRUD de Tipo de
+Socio y Socio, búsqueda tolerante a acentos (extensión `unaccent`), vista de mostrador con
+préstamos/reservas/restricción/atrasos, historial paginado, y la suite de tests Feature
+correspondiente (11 tests en 4 archivos), más seeder de demostración y guía de revisión funcional
+(`docs/REVISION-MODULO-3.md`). A diferencia del Módulo 2, este código todavía no tiene ninguna
+ejecución real: no puede declararse cerrado hasta correr `php artisan migrate` y `php artisan test
+--filter=Socios` en un entorno con PHP/PostgreSQL reales y obtener esa evidencia, exactamente el
+mismo estándar que se exigió — y se cumplió, tras dos correcciones — para el Módulo 2. Ningún
+riesgo identificado en el briefing (R-1, R-2, R-3) quedó pendiente de decisión: los tres se
+resolvieron o se documentaron como no bloqueantes dentro del propio briefing.

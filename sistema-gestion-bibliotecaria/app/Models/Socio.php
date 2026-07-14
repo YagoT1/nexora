@@ -46,4 +46,11 @@ class Socio extends Model
     {
         return $this->hasMany(HistorialAtraso::class);
     }
+
+    // Origen: Módulo 3 — Socios, Paso 2. Inversa de Reserva::socio(), que ya existía desde Módulo 1.
+    // Necesaria para la vista de mostrador (Paso 5): reservas activas del socio.
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class);
+    }
 }
