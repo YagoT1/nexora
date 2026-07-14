@@ -59,3 +59,16 @@ Ante la autorización de la Comisión Directiva para trasladar la validación de
 **Conclusión de la verificación:** el bloqueo no es la ausencia de un runtime PHP — eso tiene solución dentro de esta sesión (punto 1). El bloqueo real e insalvable dentro de esta sesión es que **Composer no tiene ningún camino de red disponible para descargar el framework Laravel ni sus dependencias**, sin importar qué intérprete PHP se use. Esto es una restricción de infraestructura del sandbox de Cowork, no del proyecto ni del código entregado.
 
 **Decisión:** se descarta definitivamente ejecutar la validación del Módulo 1 dentro de esta sesión de Cowork, en cualquier configuración. La validación real (`composer install && php artisan migrate && php artisan test`, conforme a `docs/BOOTSTRAP.md`) debe ejecutarse en un entorno con acceso de red sin restricciones al ecosistema Composer/Packagist — por ejemplo, la máquina de un desarrollador, un runner de CI/CD (GitHub Actions u otro), o un entorno de nube provisionado para tal fin. Esto no es una tarea que el equipo pueda seguir intentando resolver por sí mismo dentro de este entorno; se informa a la Comisión Directiva como cierre de esta línea de investigación, no como bloqueo pendiente de decisión institucional.
+
+---
+
+## Actualización (2026-07-14) — Reverificación al intentar el gate de validación del Módulo 2
+
+Al recibir la instrucción de proceder con el gate de validación real del Módulo 2 (`php artisan test --filter=Catalogo`), y antes de asumir que la limitación seguía vigente, se repitió la verificación empírica en esta misma sesión de Cowork (mismo sandbox, ~6 días después de la `Actualización` anterior):
+
+1. `php`, `composer`, `docker`, `docker-compose`, `podman`: **ninguno instalado**.
+2. `sudo`/`apt-get install`: **sigue bloqueado** (`sudo: The "no new privileges" flag is set` / `dpkg-lock: Permission denied` — mismo mecanismo de contenedor, sin cambios).
+3. `vendor/` del proyecto: **vacío** (0 dependencias instaladas) — confirma que ni siquiera existe un autoloader de Composer utilizable en este sandbox, más allá de la disponibilidad de un runtime PHP.
+4. Red hacia el ecosistema Composer, reverificada con `curl` directo: `packagist.org`, `repo.packagist.org` y `getcomposer.org` siguen devolviendo `403 blocked-by-allowlist` desde el proxy de salida. Sin cambios respecto del punto 2 de la verificación anterior.
+
+**Conclusión:** la limitación documentada en 2026-07-08 sigue vigente sin cambios, seis días después. No es una limitación nueva ni distinta — es la misma restricción de infraestructura del sandbox de Cowork, ahora reconfirmada específicamente para el gate del Módulo 2. **No se inventa evidencia ni se asume que la suite "debería" pasar**: la ejecución real de `php artisan test --filter=Catalogo` queda, igual que para el Módulo 1, a cargo del entorno real de desarrollo (la misma máquina que ya validó el Módulo 1 en `ADR-006`/`ADR-007`/`ADR-008`). El Módulo 2 permanece en estado "código completo, no cerrado" hasta que esa ejecución se realice y su resultado se documente.
