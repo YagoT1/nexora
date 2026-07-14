@@ -10,6 +10,7 @@ use App\Models\Autor;
 use App\Models\Categoria;
 use App\Models\Ejemplar;
 use App\Models\Libro;
+use App\Models\MovimientoInterno;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -107,5 +108,48 @@ class BusquedaCatalogoTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('Cien años de soledad');
         $respuesta->assertSee('Rayuela');
+    }
+
+    // Origen: corrección 2026-07-14 (ver ADR-012). El filtro estado=disponible ejercita
+    // Libro::scopeConEstado() -> whereDoesntHave('movimientosInternos'/'custodiasExternas', ...),
+    // la rama exacta que tenía el nombre de columna incorrecto ('fecha_devolucion_efectiva' en vez
+    // de 'fecha_retorno_efectiva'). Este test no existía en el Paso 8 original: ninguno de los
+    // tests de búsqueda ejercitaba el filtro de estado, lo cual permitió que el defecto pasara
+    // desapercibido en la suite pese a que la búsqueda por estado ya estaba implementada.
+    public function test_el_filtro_de_estado_disponible_excluye_libros_con_ejemplares_en_movimiento_interno(): void
+    {
+        $personal = User::factory()->create(['rol' => User::ROL_PERSONAL]);
+
+        $libroDisponible = Libro::create(['titulo' => 'Libro con ejemplar disponible']);
+        Ejemplar::create([
+            'libro_id' => $libroDisponible->id,
+            'modalidad_acceso' => Ejemplar::MODALIDAD_LIBRE_CIRCULACION,
+            'fecha_ingreso' => '2020-01-01',
+            'origen' => Ejemplar::ORIGEN_COMPRA,
+        ]);
+
+        $libroEnMovimiento = Libro::create(['titulo' => 'Libro con ejemplar en movimiento interno']);
+        $ejemplarEnMovimiento = Ejemplar::create([
+            'libro_id' => $libroEnMovimiento->id,
+            'modalidad_acceso' => Ejemplar::MODALIDAD_LIBRE_CIRCULACION,
+            'fecha_ingreso' => '2020-01-01',
+            'origen' => Ejemplar::ORIGEN_COMPRA,
+        ]);
+        $movimiento = MovimientoInterno::create([
+            'responsable_id' => $personal->id,
+            'proposito' => 'Exhibición temporal',
+            'fecha_inicio' => now()->toDateString(),
+            'fecha_retorno_esperada' => now()->addDays(7)->toDateString(),
+            'estado' => 'activo',
+        ]);
+        $ejemplarEnMovimiento->movimientosInternos()->attach($movimiento->id, ['fecha_retorno_efectiva' => null]);
+
+        $respuesta = $this->actingAs($personal)->get(route('catalogo.libros.index', [
+            'estado' => Ejemplar::ESTADO_DISPONIBLE,
+        ]));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Libro con ejemplar disponible');
+        $respuesta->assertDontSee('Libro con ejemplar en movimiento interno');
     }
 }

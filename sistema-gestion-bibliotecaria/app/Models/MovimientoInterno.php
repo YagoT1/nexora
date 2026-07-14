@@ -17,7 +17,9 @@ class MovimientoInterno extends Model
 
     public function ejemplares()
     {
+        // Origen: corrección 2026-07-14 (ver ADR-012). Columna real: 'fecha_retorno_efectiva'
+        // (migración 2024_01_01_000170_create_ejemplares_movimiento_interno_table).
         return $this->belongsToMany(Ejemplar::class, 'ejemplares_movimiento_interno')
-            ->withPivot('fecha_devolucion_efectiva');
+            ->withPivot('fecha_retorno_efectiva');
     }
 }

@@ -18,7 +18,9 @@ class CustodiaExterna extends Model
 
     public function ejemplares()
     {
+        // Origen: corrección 2026-07-14 (ver ADR-012). Columna real: 'fecha_retorno_efectiva'
+        // (migración 2024_01_01_000190_create_ejemplares_custodia_externa_table).
         return $this->belongsToMany(Ejemplar::class, 'ejemplares_custodia_externa')
-            ->withPivot('fecha_devolucion_efectiva');
+            ->withPivot('fecha_retorno_efectiva');
     }
 }

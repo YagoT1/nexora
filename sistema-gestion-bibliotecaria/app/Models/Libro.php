@@ -63,17 +63,20 @@ class Libro extends Model
                 Ejemplar::ESTADO_PRESTADO => $ejemplar
                     ->whereNull('estado_manual')
                     ->whereHas('prestamosDomiciliarios', fn ($q) => $q->whereIn('estado', ['activo', 'atrasado'])),
+                // Columna real de estas dos tablas pivote: 'fecha_retorno_efectiva' (corrección
+                // 2026-07-14, ver ADR-012 — no confundir con 'fecha_devolucion_efectiva', que solo
+                // aplica a la tabla pivote de préstamos institucionales).
                 Ejemplar::ESTADO_EN_MOVIMIENTO_INTERNO => $ejemplar
                     ->whereNull('estado_manual')
-                    ->whereHas('movimientosInternos', fn ($q) => $q->wherePivotNull('fecha_devolucion_efectiva')),
+                    ->whereHas('movimientosInternos', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva')),
                 Ejemplar::ESTADO_EN_CUSTODIA_EXTERNA => $ejemplar
                     ->whereNull('estado_manual')
-                    ->whereHas('custodiasExternas', fn ($q) => $q->wherePivotNull('fecha_devolucion_efectiva')),
+                    ->whereHas('custodiasExternas', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva')),
                 Ejemplar::ESTADO_DISPONIBLE => $ejemplar
                     ->whereNull('estado_manual')
                     ->whereDoesntHave('prestamosDomiciliarios', fn ($q) => $q->whereIn('estado', ['activo', 'atrasado']))
-                    ->whereDoesntHave('movimientosInternos', fn ($q) => $q->wherePivotNull('fecha_devolucion_efectiva'))
-                    ->whereDoesntHave('custodiasExternas', fn ($q) => $q->wherePivotNull('fecha_devolucion_efectiva')),
+                    ->whereDoesntHave('movimientosInternos', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva'))
+                    ->whereDoesntHave('custodiasExternas', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva')),
                 // Valor no reconocido: no debe devolver falsos positivos.
                 default => $ejemplar->whereRaw('1 = 0'),
             };

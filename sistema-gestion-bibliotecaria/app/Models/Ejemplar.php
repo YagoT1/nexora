@@ -121,14 +121,20 @@ class Ejemplar extends Model
 
     public function movimientosInternos()
     {
+        // Origen: corrección 2026-07-14 (ver ADR-012). La columna de retorno en esta tabla pivote
+        // se llama 'fecha_retorno_efectiva' (migración 2024_01_01_000170), NO
+        // 'fecha_devolucion_efectiva' — ese nombre solo corresponde a la tabla pivote de préstamos
+        // institucionales (ejemplares_prestamo_institucional). No unificar sin migrar la columna.
         return $this->belongsToMany(MovimientoInterno::class, 'ejemplares_movimiento_interno')
-            ->withPivot('fecha_devolucion_efectiva');
+            ->withPivot('fecha_retorno_efectiva');
     }
 
     public function custodiasExternas()
     {
+        // Origen: corrección 2026-07-14 (ver ADR-012). Mismo caso que movimientosInternos(): la
+        // columna real es 'fecha_retorno_efectiva' (migración 2024_01_01_000190).
         return $this->belongsToMany(CustodiaExterna::class, 'ejemplares_custodia_externa')
-            ->withPivot('fecha_devolucion_efectiva');
+            ->withPivot('fecha_retorno_efectiva');
     }
 
     /**
@@ -144,8 +150,8 @@ class Ejemplar extends Model
                 ->whereIn('estado', ['activo', 'atrasado'])
                 ->exists()
             || $this->prestamosInstitucionales()->wherePivotNull('fecha_devolucion_efectiva')->exists()
-            || $this->movimientosInternos()->wherePivotNull('fecha_devolucion_efectiva')->exists()
-            || $this->custodiasExternas()->wherePivotNull('fecha_devolucion_efectiva')->exists();
+            || $this->movimientosInternos()->wherePivotNull('fecha_retorno_efectiva')->exists()
+            || $this->custodiasExternas()->wherePivotNull('fecha_retorno_efectiva')->exists();
     }
 
     /**
@@ -191,11 +197,11 @@ class Ejemplar extends Model
             return self::ESTADO_PRESTADO;
         }
 
-        if ($this->movimientosInternos()->wherePivotNull('fecha_devolucion_efectiva')->exists()) {
+        if ($this->movimientosInternos()->wherePivotNull('fecha_retorno_efectiva')->exists()) {
             return self::ESTADO_EN_MOVIMIENTO_INTERNO;
         }
 
-        if ($this->custodiasExternas()->wherePivotNull('fecha_devolucion_efectiva')->exists()) {
+        if ($this->custodiasExternas()->wherePivotNull('fecha_retorno_efectiva')->exists()) {
             return self::ESTADO_EN_CUSTODIA_EXTERNA;
         }
 

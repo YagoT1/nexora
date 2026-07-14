@@ -38,9 +38,15 @@ php artisan test --filter=Catalogo
 ```
 
 Cubre los 7 criterios de aceptación (más el detalle de RN-08/RN-09/RN-21 y la validación de
-profundidad de Categoría en ambos sentidos) en 6 archivos bajo `tests/Feature/Catalogo/`. Como con
-el resto del Módulo 2, todavía no se ejecutó contra un entorno real desde esta sesión — es la
-primera validación pendiente.
+profundidad de Categoría en ambos sentidos) en 6 archivos bajo `tests/Feature/Catalogo/`.
+
+**Primera ejecución real (2026-07-14):** `1 failed, 26 passed (68 assertions)`. El fallo reveló un
+defecto real y preexistente del Módulo 1 (nombre de columna incorrecto en las relaciones pivote de
+movimiento interno y custodia externa de `Ejemplar`), no introducido en este módulo — diagnóstico
+completo, corrección y 4 tests de regresión nuevos en
+`eos-benchmark/Fase 6 - Development/ADR-012-fix-columna-pivote-fecha-retorno-efectiva.md`. Con el
+fix aplicado se esperan 31 tests en verde (27 originales + 4 nuevos), pero **esa re-ejecución
+todavía no se realizó** — el módulo permanece "código corregido, no cerrado" hasta obtenerla.
 
 ---
 
@@ -89,7 +95,7 @@ Cada fila indica si ya se puede revisar con lo entregado o si depende de un paso
 | 3 | "El personal puede crear un Ejemplar vinculado a un Libro existente, con modalidad Solo sala." | **Sí** | Catálogo → Libros → Ver "Ficciones" → ya tiene un ejemplar "Solo sala" cargado por el seeder; para probar el alta, click en "+ Nuevo ejemplar" sobre cualquier libro y elegir esa modalidad. |
 | 4 | "La vista del Libro muestra correctamente el estado 'Prestado' para un ejemplar con préstamo activo, sin necesidad de campo de estado explícito." | **Parcial** — `Ejemplar::estadoActual()` ya calcula "prestado" leyendo la tabla `prestamos_domiciliarios`, y la vista de detalle de Libro (`catalogo.libros.show`, Paso 6) ya muestra el resultado de ese método para cada ejemplar. Pero no hay ninguna pantalla todavía para *crear* un préstamo (Módulo 4, no iniciado), así que no se puede disparar este caso completo desde la UI. | Si querés verificarlo igual: insertar manualmente una fila en `prestamos_domiciliarios` con `estado = 'activo'` para uno de los ejemplares del seeder (por `psql` o el cliente que uses) y recargar `catalogo.libros.show` del Libro correspondiente — debería mostrar "Prestado" en la columna Estado. |
 | 5 | "La búsqueda por título parcial devuelve resultados relevantes. La búsqueda por autor devuelve todos los libros del autor." | **Sí** | Catálogo → Libros → probar el formulario de búsqueda: "cien" en Título debería devolver "Cien años de soledad"; "Borges" en Autor debería devolver "Ficciones". Combinar con Categoría/Estado/Modalidad para verificar que los filtros se combinan con AND (por ejemplo, Categoría "Ficción" + Estado "Disponible" debería excluir el ejemplar "solo sala" de Ficciones si ya está prestado, y mostrar solo los disponibles). "Limpiar filtros" debe volver al listado completo. |
-| 6 | "Un ejemplar con estado manual 'En reparación' muestra ese estado aunque no tenga movimiento activo." | **Sí** | Catálogo → Libros → Ver "Rayuela" → el ejemplar cargado por el seeder ya muestra "En reparación" en la columna Estado, sin tener ningún préstamo asociado. |
+| 6 | "Un ejemplar con estado manual 'En reparación' muestra ese estado aunque no tenga movimiento activo." | **Sí** | Catálogo → Libros → Ver "Rayuela" → el ejemplar cargado por el seeder ya muestra "En reparación" en la columna Estado, sin tener ningún préstamo asociado. Este es el criterio cuya verificación automática (`EjemplarEstadoTest`) reveló el defecto de columna pivote corregido en `ADR-012` — la corrección no cambia el comportamiento visible acá, ya lo mostraba bien porque `estado_manual` corta antes de llegar al código roto. |
 | 7 | "Al intentar cambiar la modalidad de acceso del único ejemplar disponible de un Libro con reservas Pendientes a Solo sala, el sistema muestra una alerta..." | **Sí** | Catálogo → Libros → Ver "Ficciones" → Editar el ejemplar de compra (libre circulación) → cambiar su modalidad a "Solo sala" → Guardar. El mensaje de confirmación debe incluir la advertencia de RN-21 (ya no queda ningún ejemplar de "Ficciones" que pueda salir de la biblioteca, y la Reserva sembrada sigue `pendiente`). Revertir el cambio deja de mostrar la advertencia en la siguiente edición que no toque la modalidad. |
 
 **Resumen:** de los 7 criterios de aceptación del módulo, 5 son totalmente revisables hoy (1, 3, 5, 6, 7), y 1 es parcialmente revisable con una verificación manual en la base de datos (4) — el criterio 2 de la tabla del plan ya está cubierto arriba.
@@ -117,6 +123,11 @@ Cada fila indica si ya se puede revisar con lo entregado o si depende de un paso
 - **Suite de tests (Paso 8):** 6 archivos en `tests/Feature/Catalogo/` cubren los 7 criterios de
   aceptación, RN-08/RN-09/RN-21, y la validación de profundidad de Categoría en ambos sentidos. Ver
   el detalle en `phase-summary.md`, Paso 8.
+- **Corrección de columna pivote (2026-07-14):** la primera ejecución real de la suite reveló un
+  defecto preexistente del Módulo 1 en `Ejemplar::movimientosInternos()`/`custodiasExternas()` (y en
+  `Libro::scopeConEstado()`, que duplica esa lógica para la búsqueda). Corregido, con 4 tests nuevos
+  que cierran la brecha de cobertura que lo había ocultado. Ver `ADR-012` para el detalle completo y
+  el estado de verificación pendiente.
 
 ---
 

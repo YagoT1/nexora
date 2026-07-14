@@ -260,15 +260,39 @@ de implementación recomendado por el briefing:
     Reserva/ExcepcionAutorizada): se sigue el mismo criterio que el Módulo 1, que solo
     tiene `UserFactory` — los datos de estos tests se crean directamente vía
     `Model::create()`, evitando introducir infraestructura de testing no solicitada.
-  - **No ejecutado todavía** (mismo patrón que el resto del Módulo 2 y que el Módulo 1
-    antes de `ADR-006`): este código no corrió contra PHP/PostgreSQL reales desde este
-    entorno. Es la validación pendiente antes de dar por cerrado el Módulo 2.
+  - **Primera ejecución real (2026-07-14):** `1 failed, 26 passed (68 assertions)`. El
+    único fallo reveló un defecto real y preexistente del Módulo 1, no introducido en este
+    paso — ver subsección siguiente y `ADR-012`.
 
-**No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
-código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo
-por cerrado. A diferencia de Módulo 1, esta vez ya existe un procedimiento de validación probado y
-funcionando (`docs/BOOTSTRAP.md`, `ADR-006`/`ADR-007`/`ADR-008`), por lo que el riesgo de esta
-brecha es menor y ya conocido.
+### Corrección de defecto real revelado por la primera ejecución (2026-07-14, ver `ADR-012`)
+
+La Comisión Directiva ejecutó `php artisan test --filter=Catalogo` en su entorno (el mismo que
+validó el Módulo 1) y obtuvo `1 failed, 26 passed`. El fallo (`SQLSTATE[42703]: Undefined column:
+ejemplares_movimiento_interno.fecha_devolucion_efectiva`) se rastreó hasta un nombre de columna
+incorrecto en `Ejemplar::movimientosInternos()`/`custodiasExternas()` (y sus relaciones inversas en
+`MovimientoInterno`/`CustodiaExterna`): esas dos tablas pivote usan `fecha_retorno_efectiva`, no
+`fecha_devolucion_efectiva` (ese nombre solo es correcto para la tabla pivote de préstamos
+institucionales). Se verificó con `git show 581f6fb:./app/Models/Ejemplar.php` que el mismo nombre
+incorrecto ya existía en el código original del Módulo 1 (antes de que el Paso 5 nombrara las
+relaciones) — **no es un defecto introducido en el Módulo 2**, sino uno preexistente del Módulo 1
+que su propia suite (orientada a auth/roles/auditoría) nunca ejercitó, y que la suite del Módulo 2
+tampoco alcanzaba a exponer salvo en un único camino (por el cortocircuito de `if`/`||` en
+`estadoActual()`/`tieneMovimientoActivo()`, y por la ausencia de un test que renderizara
+`catalogo.libros.show` para un ejemplar "disponible" liso, el caso más común).
+
+Corregido en `Ejemplar.php`, `MovimientoInterno.php`, `CustodiaExterna.php` y en las cuatro ramas
+equivalentes de `Libro::scopeConEstado()` (que reproduce la misma lógica para el filtro de
+búsqueda por estado — también afectado, sin test previo que lo cubriera). Se agregaron 4 tests de
+regresión que cierran la brecha de cobertura que había ocultado el defecto: render de
+`catalogo.libros.show` para un ejemplar disponible, creación real de un `MovimientoInterno` y de
+una `CustodiaExterna` vinculados a un Ejemplar verificando `tieneMovimientoActivo()`/
+`estadoActual()`, y el filtro `estado=disponible` de búsqueda. Detalle completo del diagnóstico,
+la decisión y las alternativas descartadas en `ADR-012`.
+
+**No ejecutado todavía contra el entorno real** (mismo patrón que el resto del Módulo 2 y que el
+Módulo 1 antes de `ADR-006`): este sandbox no dispone de PHP/Composer/PostgreSQL (`ADR-002`). Con
+el fix aplicado se esperan 31 tests en verde (27 originales + 4 nuevos), pero esa confirmación
+todavía no se obtuvo — es la validación pendiente antes de dar por cerrado el Módulo 2.
 
 ### Preparación para revisión funcional (2026-07-14)
 
@@ -298,27 +322,4 @@ la conclusión de la revisión objetiva anterior de que el tooling de entorno ya
 ## Decisión
 
 Módulo 1 queda **cerrado**: código, migraciones, seeders y suite de tests completa ejecutados con
-éxito contra PHP 8.5 y PostgreSQL 16 reales (`ADR-006`/`ADR-007`/`ADR-008`), y con su historial
-consolidado en un único repositorio (`nexora`), publicado en GitHub (`ADR-009`/`ADR-010`). El único
-punto pendiente — el pre-checklist de infraestructura (punto 4) — es no bloqueante y no impide
-iniciar el Módulo 2.
-
-**Nota de gestión (2026-07-14):** ante la observación de que las últimas iteraciones se concentraron
-en instalación y validación de herramientas (MCP de Postgres, Desktop Commander MCP, incidente SSL),
-se hizo una evaluación objetiva: no existe ningún bloqueo real para el producto (Módulo 1 validado
-en verde; el pre-checklist de infraestructura no es requisito de Módulo 2), y las tareas de tooling
-pendientes (`ADR-011`, pasos 3-9 de 9) son mejoras de entorno de desarrollo, no requisitos del
-roadmap. Se decidió pausar ese tooling sin cerrarlo (queda documentado y retomable) y avanzar
-directamente con la implementación del Módulo 2 — Catálogo.
-
-**Módulo 2 — Catálogo (2026-07-14): código completo, Pasos 1 a 8.** Los 8 pasos del plan de
-implementación recomendado por `BRIEFING-MODULO-2-CATALOGO.md` están escritos: CRUD de Autor,
-Editorial, Categoría (con validación de profundidad máxima bidireccional), Libro y Ejemplar;
-búsqueda de catálogo; vista de detalle de Libro; validación RN-21; y la suite de tests Feature
-correspondiente. Al igual que el Módulo 1 antes de `ADR-006`, **nada de esto se ejecutó todavía
-contra PHP/PostgreSQL reales** — el checkpoint de calidad real es correr `php artisan test` en el
-entorno ya validado (mismo procedimiento que cerró el Módulo 1). Hasta que esa ejecución no se haga
-y confirme resultados en verde, el Módulo 2 se considera **código completo, no cerrado**. Único
-punto diferido, no bloqueante: R-1 (historial de condición física por ejemplar), pendiente de una
-decisión de diseño (entidad versionada vs. sobrescritura de campo) que no corresponde tomar
-unilateralmente — ver `BRIEFING-MODULO-2-CATALOGO.md`, sección "Recomendación".
+éxito contra PHP 8.5 y PostgreSQL 16 reales (`ADR-0
