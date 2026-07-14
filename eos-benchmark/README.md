@@ -21,7 +21,7 @@ Este repositorio contiene **dos tipos de contenido distintos**, y esa distinció
 | 03 — Architecture | ✔ Cerrada | Propuesta de Arquitectura v1 / v2, Plan de Implementación Fase 1 v1 / v2 |
 | 04 — UX & Functional Design | ✔ Cerrada | 3 prototipos navegables (HTML) |
 | 05 — Planning (Development Readiness Gate) | ✔ Cerrada | Sin entregable propio — confirma madurez para desarrollo (ver su phase-summary) |
-| 06 — Development | ⏳ En curso — Módulo 1/10, código escrito, pendiente de validación | `Fase 6 - Development/phase-summary.md`, ADR-001, ADR-002; código en repositorio separado `sistema-gestion-bibliotecaria/` |
+| 06 — Development | ⏳ En curso — Módulo 1/10 cerrado (38/38 tests), Módulo 2 en preparación | `Fase 6 - Development/phase-summary.md`, ADR-001 (enmendado por ADR-010), ADR-002 a ADR-010; código en `sistema-gestion-bibliotecaria/`, subcarpeta de este mismo monorepo (`nexora`) |
 | 07 — Quality Assurance | Pendiente | — |
 | 08 — Deployment | Pendiente | — |
 | 09 — Operations | Pendiente | — |
