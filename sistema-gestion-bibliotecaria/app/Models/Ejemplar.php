@@ -25,6 +25,24 @@ class Ejemplar extends Model
         self::ESTADO_MANUAL_EXTRAVIADO,
     ];
 
+    // Estados derivados (D-09) — nunca se asignan directamente, los calcula estadoActual().
+    public const ESTADO_DISPONIBLE = 'disponible';
+    public const ESTADO_PRESTADO = 'prestado';
+    public const ESTADO_EN_MOVIMIENTO_INTERNO = 'en_movimiento_interno';
+    public const ESTADO_EN_CUSTODIA_EXTERNA = 'en_custodia_externa';
+
+    // Origen: Plan de Implementación v2, Módulo 2, "Búsqueda de catálogo: ... estado" (Paso 5).
+    // Universo completo de valores que puede devolver estadoActual(), para usar en el filtro de
+    // búsqueda y en cualquier <select> que necesite listarlos todos (manuales + derivados).
+    public const ESTADOS_OPERATIVOS = [
+        self::ESTADO_DISPONIBLE,
+        self::ESTADO_MANUAL_EN_REPARACION,
+        self::ESTADO_MANUAL_EXTRAVIADO,
+        self::ESTADO_PRESTADO,
+        self::ESTADO_EN_MOVIMIENTO_INTERNO,
+        self::ESTADO_EN_CUSTODIA_EXTERNA,
+    ];
+
     public const MODALIDAD_LIBRE_CIRCULACION = 'libre_circulacion';
     public const MODALIDAD_SOLO_SALA = 'solo_sala';
     public const MODALIDAD_RESTRINGIDO = 'restringido_a_autorizacion';
@@ -70,6 +88,32 @@ class Ejemplar extends Model
     }
 
     /**
+     * Relaciones agregadas en Módulo 2 (Paso 5, búsqueda de catálogo): antes existían solo como
+     * belongsToMany() anónimos e inline dentro de tieneMovimientoActivo()/estadoActual(), lo cual
+     * alcanzaba para esos dos métodos pero no permite construir un whereHas() desde Libro para
+     * filtrar por estado. Nombrarlas también las deja listas para los Módulos 4/5 (préstamos
+     * institucionales, movimientos internos, custodia externa), que de todos modos las van a
+     * necesitar. No cambia ningún comportamiento existente — ver refactor de ambos métodos abajo.
+     */
+    public function prestamosInstitucionales()
+    {
+        return $this->belongsToMany(PrestamoInstitucional::class, 'ejemplares_prestamo_institucional')
+            ->withPivot('fecha_devolucion_efectiva');
+    }
+
+    public function movimientosInternos()
+    {
+        return $this->belongsToMany(MovimientoInterno::class, 'ejemplares_movimiento_interno')
+            ->withPivot('fecha_devolucion_efectiva');
+    }
+
+    public function custodiasExternas()
+    {
+        return $this->belongsToMany(CustodiaExterna::class, 'ejemplares_custodia_externa')
+            ->withPivot('fecha_devolucion_efectiva');
+    }
+
+    /**
      * RN-04: verificación cruzada de la invariante de circulación. Debe consultarse ANTES de crear
      * cualquier movimiento nuevo (préstamo domiciliario, institucional, interno o custodia externa),
      * ademas de confiar en el indice unico parcial de cada tabla (DA-09 Nivel 1). Este metodo es el
@@ -81,15 +125,9 @@ class Ejemplar extends Model
         return $this->prestamosDomiciliarios()
                 ->whereIn('estado', ['activo', 'atrasado'])
                 ->exists()
-            || $this->belongsToMany(PrestamoInstitucional::class, 'ejemplares_prestamo_institucional')
-                ->wherePivotNull('fecha_devolucion_efectiva')
-                ->exists()
-            || $this->belongsToMany(MovimientoInterno::class, 'ejemplares_movimiento_interno')
-                ->wherePivotNull('fecha_devolucion_efectiva')
-                ->exists()
-            || $this->belongsToMany(CustodiaExterna::class, 'ejemplares_custodia_externa')
-                ->wherePivotNull('fecha_devolucion_efectiva')
-                ->exists();
+            || $this->prestamosInstitucionales()->wherePivotNull('fecha_devolucion_efectiva')->exists()
+            || $this->movimientosInternos()->wherePivotNull('fecha_devolucion_efectiva')->exists()
+            || $this->custodiasExternas()->wherePivotNull('fecha_devolucion_efectiva')->exists();
     }
 
     /**
@@ -104,19 +142,17 @@ class Ejemplar extends Model
         }
 
         if ($this->prestamosDomiciliarios()->whereIn('estado', ['activo', 'atrasado'])->exists()) {
-            return 'prestado';
+            return self::ESTADO_PRESTADO;
         }
 
-        if ($this->belongsToMany(MovimientoInterno::class, 'ejemplares_movimiento_interno')
-            ->wherePivotNull('fecha_devolucion_efectiva')->exists()) {
-            return 'en_movimiento_interno';
+        if ($this->movimientosInternos()->wherePivotNull('fecha_devolucion_efectiva')->exists()) {
+            return self::ESTADO_EN_MOVIMIENTO_INTERNO;
         }
 
-        if ($this->belongsToMany(CustodiaExterna::class, 'ejemplares_custodia_externa')
-            ->wherePivotNull('fecha_devolucion_efectiva')->exists()) {
-            return 'en_custodia_externa';
+        if ($this->custodiasExternas()->wherePivotNull('fecha_devolucion_efectiva')->exists()) {
+            return self::ESTADO_EN_CUSTODIA_EXTERNA;
         }
 
-        return 'disponible';
+        return self::ESTADO_DISPONIBLE;
     }
 }

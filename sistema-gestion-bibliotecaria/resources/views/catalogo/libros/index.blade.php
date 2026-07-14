@@ -2,6 +2,25 @@
 
 @section('titulo', 'Libros')
 
+@php
+    // Etiquetas en español para los <select> de estado/modalidad. Se definen acá (no en el
+    // modelo) porque son puramente de presentación — Ejemplar solo expone los valores canónicos
+    // (Ejemplar::ESTADOS_OPERATIVOS / MODALIDADES_ACCESO) que se usan como clave.
+    $etiquetasEstado = [
+        \App\Models\Ejemplar::ESTADO_DISPONIBLE => 'Disponible',
+        \App\Models\Ejemplar::ESTADO_PRESTADO => 'Prestado',
+        \App\Models\Ejemplar::ESTADO_EN_MOVIMIENTO_INTERNO => 'En movimiento interno',
+        \App\Models\Ejemplar::ESTADO_EN_CUSTODIA_EXTERNA => 'En custodia externa',
+        \App\Models\Ejemplar::ESTADO_MANUAL_EN_REPARACION => 'En reparación',
+        \App\Models\Ejemplar::ESTADO_MANUAL_EXTRAVIADO => 'Extraviado',
+    ];
+    $etiquetasModalidad = [
+        \App\Models\Ejemplar::MODALIDAD_LIBRE_CIRCULACION => 'Libre circulación',
+        \App\Models\Ejemplar::MODALIDAD_SOLO_SALA => 'Solo en sala',
+        \App\Models\Ejemplar::MODALIDAD_RESTRINGIDO => 'Restringido a autorización',
+    ];
+@endphp
+
 @section('contenido')
     @include('catalogo._subnav')
 
@@ -11,6 +30,71 @@
             Nuevo libro
         </a>
     </div>
+
+    {{--
+        Paso 5 del briefing: búsqueda de catálogo. GET simple (no @csrf: no modifica estado) que
+        preserva los filtros en la URL — permite compartir/recargar una búsqueda y funciona con
+        withQueryString() en la paginación sin duplicar controles.
+    --}}
+    <form method="GET" action="{{ route('catalogo.libros.index') }}"
+          class="bg-white border border-gray-200 rounded p-4 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+        <div>
+            <label class="block text-xs text-gray-600 mb-1" for="f-titulo">Título</label>
+            <input type="text" name="titulo" id="f-titulo" value="{{ $filtros['titulo'] ?? '' }}"
+                   class="w-full border-gray-300 rounded text-sm" placeholder="Buscar por título">
+        </div>
+        <div>
+            <label class="block text-xs text-gray-600 mb-1" for="f-autor">Autor</label>
+            <input type="text" name="autor" id="f-autor" value="{{ $filtros['autor'] ?? '' }}"
+                   class="w-full border-gray-300 rounded text-sm" placeholder="Buscar por autor">
+        </div>
+        <div>
+            <label class="block text-xs text-gray-600 mb-1" for="f-categoria">Categoría</label>
+            <select name="categoria_id" id="f-categoria" class="w-full border-gray-300 rounded text-sm">
+                <option value="">Todas</option>
+                @foreach ($categoriasDisponibles as $categoria)
+                    <option value="{{ $categoria->id }}"
+                            @selected(($filtros['categoria_id'] ?? null) == $categoria->id)>
+                        {{ $categoria->nombre }}
+                    </option>
+                    @foreach ($categoria->subcategorias as $subcategoria)
+                        <option value="{{ $subcategoria->id }}"
+                                @selected(($filtros['categoria_id'] ?? null) == $subcategoria->id)>
+                            &nbsp;&nbsp;— {{ $subcategoria->nombre }}
+                        </option>
+                    @endforeach
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs text-gray-600 mb-1" for="f-estado">Estado</label>
+            <select name="estado" id="f-estado" class="w-full border-gray-300 rounded text-sm">
+                <option value="">Todos</option>
+                @foreach ($etiquetasEstado as $valor => $etiqueta)
+                    <option value="{{ $valor }}" @selected(($filtros['estado'] ?? null) === $valor)>
+                        {{ $etiqueta }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs text-gray-600 mb-1" for="f-modalidad">Modalidad</label>
+            <select name="modalidad" id="f-modalidad" class="w-full border-gray-300 rounded text-sm">
+                <option value="">Todas</option>
+                @foreach ($etiquetasModalidad as $valor => $etiqueta)
+                    <option value="{{ $valor }}" @selected(($filtros['modalidad'] ?? null) === $valor)>
+                        {{ $etiqueta }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="md:col-span-5 flex items-center gap-3">
+            <button type="submit" class="rounded bg-gray-900 text-white text-sm px-4 py-2">Buscar</button>
+            @if (array_filter($filtros))
+                <a href="{{ route('catalogo.libros.index') }}" class="text-sm text-gray-600">Limpiar filtros</a>
+            @endif
+        </div>
+    </form>
 
     <table class="w-full text-sm bg-white border border-gray-200 rounded">
         <thead class="bg-gray-100 text-left">
@@ -41,7 +125,13 @@
                 </tr>
             @empty
                 <tr>
-                    <td class="px-4 py-4 text-gray-500" colspan="4">No hay libros cargados.</td>
+                    <td class="px-4 py-4 text-gray-500" colspan="4">
+                        @if (array_filter($filtros))
+                            No hay libros que coincidan con los filtros aplicados.
+                        @else
+                            No hay libros cargados.
+                        @endif
+                    </td>
                 </tr>
             @endforelse
         </tbody>

@@ -160,8 +160,31 @@ de implementación recomendado por el briefing:
   pantalla de edición de Libro (`catalogo.libros.edit`) hace de punto de gestión provisorio de sus
   ejemplares (listado + alta + edición) hasta que el Paso 6 la reemplace por la vista de detalle
   definitiva con búsqueda y estado.
-- **Pasos 5 a 8 (búsqueda, vista de detalle, RN-21, tests): pendientes**, en ese orden, conforme al
-  plan del briefing.
+- **Paso 5 (Búsqueda de catálogo) — código escrito:** filtro combinado (AND) por título (parcial,
+  `ilike`), autor (parcial, por nombre), categoría, estado y modalidad, sobre `catalogo.libros.index`
+  vía query string (`withQueryString()` en la paginación). `LibroSearchRequest` (nuevo) valida los
+  cinco filtros antes de construir la consulta.
+  - **Decisión de diseño relevante:** el filtro por `estado` no puede resolverse con un `where()`
+    simple porque el estado de un Ejemplar es derivado (D-09), no una columna — lo calcula
+    `Ejemplar::estadoActual()` en PHP sobre una instancia ya cargada, algo que no puede reutilizarse
+    directamente dentro de una cláusula SQL `WHERE`. Se resolvió con `Libro::scopeConEstado()`
+    (nuevo), que reproduce la misma lógica de negocio como condiciones SQL (`whereHas`/`match`).
+    **Queda una duplicación deliberada y documentada** entre `estadoActual()` y `scopeConEstado()`:
+    ambos deben mantenerse sincronizados manualmente si cualquiera de los dos cambia (advertencia de
+    mantenimiento dejada como comentario en el propio `Libro.php`). No se evaluó viable evitar la
+    duplicación sin introducir una capa de abstracción adicional (por ejemplo, generar el SQL desde
+    una única fuente declarativa) que sería sobreingeniería para cinco estados fijos que ya están
+    acotados por dominio (D-09) y no cambian con frecuencia — YAGNI.
+  - `Ejemplar`: se nombraron las relaciones `prestamosInstitucionales()`, `movimientosInternos()`,
+    `custodiasExternas()` (antes solo existían como `belongsToMany()` anónimos e inline dentro de
+    `tieneMovimientoActivo()`/`estadoActual()`) para poder usarlas desde `whereHas()` en el scope de
+    `Libro`. Cambio sin efecto en el comportamiento existente (mismo query, ahora con nombre). Se
+    agregó la constante `Ejemplar::ESTADOS_OPERATIVOS` (universo completo: los 4 estados derivados +
+    los 2 manuales) para validación y para poblar el `<select>` de búsqueda.
+  - No amerita una ADR propia: es una decisión de implementación dentro del diseño de datos ya
+    aprobado (D-09, RN-04), no una modificación de arquitectura, dominio o roadmap.
+- **Pasos 6 a 8 (vista de detalle, RN-21, tests): pendientes**, en ese orden, conforme al plan del
+  briefing.
 
 **No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
 código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo

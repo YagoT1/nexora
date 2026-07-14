@@ -12,18 +12,53 @@ namespace App\Http\Controllers\Catalogo;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalogo\LibroRequest;
+use App\Http\Requests\Catalogo\LibroSearchRequest;
 use App\Models\Autor;
 use App\Models\Categoria;
 use App\Models\Editorial;
+use App\Models\Ejemplar;
 use App\Models\Libro;
 
 class LibroController extends Controller
 {
-    public function index()
+    /**
+     * Paso 5 del briefing: búsqueda de catálogo por título (parcial), autor (parcial, por nombre),
+     * categoría, estado y modalidad. Los cuatro últimos son opcionales y se combinan con AND: cada
+     * filtro aplicado reduce el resultado, no lo amplía (comportamiento estándar de un buscador con
+     * múltiples campos).
+     */
+    public function index(LibroSearchRequest $request)
     {
-        $libros = Libro::with(['autores', 'editorial'])->orderBy('titulo')->paginate(20);
+        $filtros = $request->validated();
 
-        return view('catalogo.libros.index', compact('libros'));
+        $libros = Libro::with(['autores', 'editorial'])
+            ->when($filtros['titulo'] ?? null, fn ($q, $titulo) => $q->where('titulo', 'ilike', "%{$titulo}%"))
+            ->when($filtros['autor'] ?? null, fn ($q, $autor) => $q->whereHas(
+                'autores',
+                fn ($sub) => $sub->where('nombre', 'ilike', "%{$autor}%")
+            ))
+            ->when($filtros['categoria_id'] ?? null, fn ($q, $categoriaId) => $q->whereHas(
+                'categorias',
+                fn ($sub) => $sub->where('categorias.id', $categoriaId)
+            ))
+            ->when($filtros['estado'] ?? null, fn ($q, $estado) => $q->conEstado($estado))
+            ->when($filtros['modalidad'] ?? null, fn ($q, $modalidad) => $q->whereHas(
+                'ejemplares',
+                fn ($sub) => $sub->where('modalidad_acceso', $modalidad)
+            ))
+            ->orderBy('titulo')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('catalogo.libros.index', array_merge(
+            compact('libros', 'filtros'),
+            [
+                'categoriasDisponibles' => Categoria::whereNull('categoria_padre_id')
+                    ->with('subcategorias')
+                    ->orderBy('nombre')
+                    ->get(),
+            ]
+        ));
     }
 
     public function create()
