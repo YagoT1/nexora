@@ -169,6 +169,31 @@ por cerrado. A diferencia de Módulo 1, esta vez ya existe un procedimiento de v
 funcionando (`docs/BOOTSTRAP.md`, `ADR-006`/`ADR-007`/`ADR-008`), por lo que el riesgo de esta
 brecha es menor y ya conocido.
 
+### Preparación para revisión funcional (2026-07-14)
+
+Por instrucción del responsable del proyecto, se preparó el entorno para que los Pasos 1 a 4 del
+Módulo 2 puedan revisarse funcionalmente (no solo leerse como código):
+
+- **`CatalogoDemoSeeder`** (nuevo, registrado en `DatabaseSeeder`): carga Autores, Editoriales,
+  Categorías (una con subcategorías, otra sin — para ver el límite de 2 niveles sin cargar nada a
+  mano) y Libros/Ejemplares elegidos específicamente para cubrir los casos que importan: un libro
+  con varios autores, uno sin editorial, uno sin ISBN y uno sin ningún autor (Modelo de Dominio v2,
+  1.1: "un libro puede no tener autor identificable"), y las tres modalidades de acceso más los dos
+  estados manuales de Ejemplar. Idempotente (`firstOrCreate` / verificación de existencia antes de
+  crear cada Ejemplar), no corre en producción — mismo criterio que `AdminUserSeeder`.
+- **`docs/REVISION-MODULO-2.md`** (nuevo): guía de revisión con los usuarios de prueba ya existentes
+  desde el Módulo 1 (uno por rol), los datos cargados por el seeder, y una tabla que cruza cada
+  criterio de aceptación del Plan de Implementación v2 (Módulo 2) contra si ya es revisable, es
+  parcialmente revisable (con una verificación manual puntual en base de datos), o depende de un
+  paso todavía no implementado (búsqueda, RN-21). Se optó por documentar explícitamente esta
+  frontera en vez de dejar que quien revise deduzca por su cuenta qué se puede probar.
+- **README.md**: se agregó una sección propia arriba del scaffold estándar de Laravel, apuntando a
+  `docs/BOOTSTRAP.md` y `docs/REVISION-MODULO-2.md`.
+
+No se creó infraestructura nueva (no hay migraciones nuevas en este paso) ni se tocó ningún archivo
+de configuración del entorno — es contenido de aplicación (seeder) y documentación, coherente con
+la conclusión de la revisión objetiva anterior de que el tooling de entorno ya no es prioritario.
+
 ## Decisión
 
 Módulo 1 queda **cerrado**: código, migraciones, seeders y suite de tests completa ejecutados con
