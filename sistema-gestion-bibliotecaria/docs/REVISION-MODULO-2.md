@@ -1,4 +1,4 @@
-# Guía de revisión funcional — Módulo 2 (Catálogo), Pasos 1 a 7
+# Guía de revisión funcional — Módulo 2 (Catálogo), Pasos 1 a 8
 
 Este documento prepara la revisión funcional de lo entregado hasta ahora del Módulo 2 — Catálogo
 (Autor, Editorial, Categoría, Libro, Ejemplar). No reemplaza `docs/BOOTSTRAP.md`: asume que ya
@@ -29,6 +29,18 @@ Levantar el servidor:
 ```bash
 php artisan serve
 ```
+
+Además de la revisión manual de este documento, correr la suite automática (Paso 8) es el primer
+chequeo objetivo antes de cualquier revisión visual:
+
+```bash
+php artisan test --filter=Catalogo
+```
+
+Cubre los 7 criterios de aceptación (más el detalle de RN-08/RN-09/RN-21 y la validación de
+profundidad de Categoría en ambos sentidos) en 6 archivos bajo `tests/Feature/Catalogo/`. Como con
+el resto del Módulo 2, todavía no se ejecutó contra un entorno real desde esta sesión — es la
+primera validación pendiente.
 
 ---
 
@@ -102,6 +114,9 @@ Cada fila indica si ya se puede revisar con lo entregado o si depende de un paso
   libro" de esas pantallas, ahora redirigen a `catalogo.libros.show` en vez de a `catalogo.libros.edit`
   (que desde el Paso 6 ya no lista ejemplares). Si notás algún enlace que todavía apunte a `edit`
   después de gestionar un ejemplar, es justamente el defecto que esta corrección debía eliminar.
+- **Suite de tests (Paso 8):** 6 archivos en `tests/Feature/Catalogo/` cubren los 7 criterios de
+  aceptación, RN-08/RN-09/RN-21, y la validación de profundidad de Categoría en ambos sentidos. Ver
+  el detalle en `phase-summary.md`, Paso 8.
 
 ---
 

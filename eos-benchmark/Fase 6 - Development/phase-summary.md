@@ -225,7 +225,44 @@ de implementación recomendado por el briefing:
     modalidad de ese ejemplar a Solo sala, sin necesidad de construir ninguna pantalla de Módulo 5.
   - No amerita ADR: aplica RN-08/RN-09/RN-21 ya definidas en el dominio, sin introducir ninguna
     entidad, tabla o decisión de arquitectura nueva.
-- **Paso 8 (tests): pendiente.**
+- **Paso 8 (Tests Feature del Módulo 2) — código escrito:** 6 archivos bajo
+  `tests/Feature/Catalogo/`, mismo patrón que los tests del Módulo 1 (`RefreshDatabase`,
+  `User::factory()->create(['rol' => ...])`, `actingAs()`, nombres de método en español).
+  - `AccesoCatalogoTest`: control de acceso por rol a `catalogo.libros.index` (Voluntario
+    bloqueado, Personal/Administrador permitido, visitante redirigido a login) — mismo
+    patrón que `RoleAuthorizationTest` del Módulo 1, aplicado a las rutas de Catálogo.
+  - `LibroTest`: criterio 1 (Libro con múltiples autores, sin ISBN, con categoría y
+    subcategoría), el caso sin ningún autor (Modelo de Dominio v2, 1.1), y el guard de
+    `destroy()` contra Ejemplares asociados (D-02).
+  - `CategoriaProfundidadTest`: criterio 2 en ambos sentidos — no permite crear una
+    subcategoría cuyo padre ya es subcategoría, tampoco permite editar una categoría con
+    subcategorías propias para asignarle un padre (el sentido inverso agregado en
+    `CategoriaRequest`), una categoría no puede ser su propia padre, y el caso positivo
+    (crear una subcategoría válida) para no cubrir solo el camino de error.
+  - `EjemplarEstadoTest`: criterio 3 (alta de Ejemplar Solo sala), criterio 6 (estado
+    manual "En reparación" sin movimiento activo), criterio 4 (estado "Prestado" con un
+    `PrestamoDomiciliario` activo creado directamente en el test, ya que la UI para
+    crearlo es Módulo 4), y RN-08/RN-09 sobre `Ejemplar::puedeSalirDeLaBiblioteca()`:
+    Solo sala nunca sale, Restringido sin excepción no sale, Restringido con una
+    `ExcepcionAutorizada` vigente para ESE ejemplar sí sale, y dos casos negativos que
+    prueban que la verificación está correctamente acotada por `entidad_afectada_id`
+    (la excepción de otro ejemplar no autoriza) y por vigencia (una excepción revocada
+    no autoriza).
+  - `BusquedaCatalogoTest`: criterio 5 (título parcial, autor devuelve todos sus libros),
+    más la combinación de filtros con AND (categoría + modalidad) y que "Limpiar
+    filtros" muestra el listado completo — comportamientos del Paso 5 no cubiertos
+    literalmente por el criterio 5 pero sí por su implementación.
+  - `Rn21ModalidadTest`: criterio 7 / RN-21 — alerta al dejar sin ejemplares disponibles
+    un Libro con reserva pendiente, y tres casos negativos que prueban ausencia de falsos
+    positivos: otro ejemplar del libro sigue disponible, el libro no tiene reservas
+    pendientes, y se edita el ejemplar sin cambiar la modalidad.
+  - No se agregaron factories nuevas (Autor/Editorial/Categoria/Libro/Ejemplar/Socio/
+    Reserva/ExcepcionAutorizada): se sigue el mismo criterio que el Módulo 1, que solo
+    tiene `UserFactory` — los datos de estos tests se crean directamente vía
+    `Model::create()`, evitando introducir infraestructura de testing no solicitada.
+  - **No ejecutado todavía** (mismo patrón que el resto del Módulo 2 y que el Módulo 1
+    antes de `ADR-006`): este código no corrió contra PHP/PostgreSQL reales desde este
+    entorno. Es la validación pendiente antes de dar por cerrado el Módulo 2.
 
 **No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
 código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo
@@ -273,3 +310,15 @@ en verde; el pre-checklist de infraestructura no es requisito de Módulo 2), y l
 pendientes (`ADR-011`, pasos 3-9 de 9) son mejoras de entorno de desarrollo, no requisitos del
 roadmap. Se decidió pausar ese tooling sin cerrarlo (queda documentado y retomable) y avanzar
 directamente con la implementación del Módulo 2 — Catálogo.
+
+**Módulo 2 — Catálogo (2026-07-14): código completo, Pasos 1 a 8.** Los 8 pasos del plan de
+implementación recomendado por `BRIEFING-MODULO-2-CATALOGO.md` están escritos: CRUD de Autor,
+Editorial, Categoría (con validación de profundidad máxima bidireccional), Libro y Ejemplar;
+búsqueda de catálogo; vista de detalle de Libro; validación RN-21; y la suite de tests Feature
+correspondiente. Al igual que el Módulo 1 antes de `ADR-006`, **nada de esto se ejecutó todavía
+contra PHP/PostgreSQL reales** — el checkpoint de calidad real es correr `php artisan test` en el
+entorno ya validado (mismo procedimiento que cerró el Módulo 1). Hasta que esa ejecución no se haga
+y confirme resultados en verde, el Módulo 2 se considera **código completo, no cerrado**. Único
+punto diferido, no bloqueante: R-1 (historial de condición física por ejemplar), pendiente de una
+decisión de diseño (entidad versionada vs. sobrescritura de campo) que no corresponde tomar
+unilateralmente — ver `BRIEFING-MODULO-2-CATALOGO.md`, sección "Recomendación".
