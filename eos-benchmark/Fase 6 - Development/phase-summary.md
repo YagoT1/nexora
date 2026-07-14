@@ -183,8 +183,24 @@ de implementación recomendado por el briefing:
     los 2 manuales) para validación y para poblar el `<select>` de búsqueda.
   - No amerita una ADR propia: es una decisión de implementación dentro del diseño de datos ya
     aprobado (D-09, RN-04), no una modificación de arquitectura, dominio o roadmap.
-- **Pasos 6 a 8 (vista de detalle, RN-21, tests): pendientes**, en ese orden, conforme al plan del
-  briefing.
+- **Paso 6 (Vista de detalle de Libro) — código escrito:** ruta `catalogo.libros.show` habilitada
+  (antes excluida del resource); `LibroController::show()` carga autores, editorial, categorías y
+  ejemplares del Libro. La vista nueva (`catalogo/libros/show.blade.php`) muestra los datos propios
+  del Libro y la tabla de Ejemplares con estado (vía `estadoActual()`, sin duplicar su lógica en la
+  vista), modalidad, condición física, origen y fecha de ingreso.
+  - **Refactor de las etiquetas en español:** se agregaron `Ejemplar::ETIQUETAS_ESTADO` y
+    `ETIQUETAS_MODALIDAD` (arrays const asociativos, mismo patrón que `ESTADOS_OPERATIVOS`) como
+    única fuente de verdad, y se actualizó `index.blade.php` (Paso 5) para consumirlas en vez de
+    mantener un array literal propio — evita que el Paso 6 introdujera una tercera copia de la
+    misma traducción, algo que hubiera sido una duplicación evitable sin justificación (a diferencia
+    de la de `scopeConEstado()`, que sí es necesaria porque cruza PHP↔SQL).
+  - **Cambio de responsabilidad respecto del Paso 4:** la pantalla de edición de Libro
+    (`catalogo.libros.edit`) deja de listar/gestionar Ejemplares — esa responsabilidad pasa
+    definitivamente a `show`, tal como estaba previsto desde que se dejó esa nota en el Paso 4. Edit
+    ahora solo edita los campos propios del Libro y enlaza a `show`.
+  - No amerita ADR: implementación directa de CU-4 del briefing, sin impacto en arquitectura,
+    dominio o roadmap.
+- **Pasos 7 y 8 (RN-21, tests): pendientes**, en ese orden, conforme al plan del briefing.
 
 **No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
 código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo

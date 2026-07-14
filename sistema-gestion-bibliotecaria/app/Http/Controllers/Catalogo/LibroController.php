@@ -3,10 +3,6 @@
 // Origen: Plan de Implementación v2, Módulo 2 — Catálogo, "CRUD de Libro: título, ISBN (no único,
 // no obligatorio), año, edición, idioma, descripción, autores (relación M:N), editorial,
 // categorías". Ruta protegida por middleware role:administrador,personal (Modelo de Dominio v2, 6.1).
-//
-// 'show' queda deliberadamente fuera de este paso: la vista de detalle de Libro (Paso 6 del
-// briefing) necesita listar los ejemplares del libro con su estado actual, y Ejemplar (Paso 4)
-// todavía no existe. Se habilita cuando corresponda, en el Paso 6.
 
 namespace App\Http\Controllers\Catalogo;
 
@@ -61,6 +57,18 @@ class LibroController extends Controller
         ));
     }
 
+    /**
+     * Paso 6 del briefing (CU-4): vista de detalle de Libro con el listado de sus ejemplares y el
+     * estado actual de cada uno. Reemplaza la gestión provisoria que hasta ahora vivía en la
+     * pantalla de edición — ver nota removida de edit().
+     */
+    public function show(Libro $libro)
+    {
+        $libro->load('autores', 'categorias', 'editorial', 'ejemplares');
+
+        return view('catalogo.libros.show', compact('libro'));
+    }
+
     public function create()
     {
         return view('catalogo.libros.create', $this->datosDeApoyoParaFormulario());
@@ -79,9 +87,7 @@ class LibroController extends Controller
 
     public function edit(Libro $libro)
     {
-        // 'ejemplares' se carga aquí porque, hasta el Paso 6 (vista de detalle de Libro), esta
-        // pantalla de edición hace también de punto de gestión de los ejemplares del libro.
-        $libro->load('autores', 'categorias', 'ejemplares');
+        $libro->load('autores', 'categorias');
 
         return view('catalogo.libros.edit', array_merge(
             $this->datosDeApoyoParaFormulario(),

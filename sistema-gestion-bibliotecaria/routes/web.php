@@ -58,8 +58,8 @@ Route::middleware(['auth', 'role:administrador,personal'])
         Route::resource('autores', AutorController::class, ['except' => ['show'], 'parameters' => ['autores' => 'autor']]);
         Route::resource('editoriales', EditorialController::class, ['except' => ['show'], 'parameters' => ['editoriales' => 'editorial']]);
         Route::resource('categorias', CategoriaController::class, ['except' => ['show'], 'parameters' => ['categorias' => 'categoria']]);
-        // 'show' se habilita en el Paso 6 (vista de detalle de Libro con sus ejemplares).
-        Route::resource('libros', LibroController::class, ['except' => ['show'], 'parameters' => ['libros' => 'libro']]);
+        // 'show' habilitado (Paso 6): vista de detalle de Libro con sus ejemplares y estado actual.
+        Route::resource('libros', LibroController::class, ['parameters' => ['libros' => 'libro']]);
         // Anidada bajo Libro: un Ejemplar siempre existe en el contexto de un Libro (D-02). Sin
         // index/show propios: el listado es responsabilidad de la vista de detalle de Libro (Paso 6).
         Route::resource('libros.ejemplares', EjemplarController::class, [
@@ -67,4 +67,5 @@ Route::middleware(['auth', 'role:administrador,personal'])
             'parameters' => ['libros' => 'libro', 'ejemplares' => 'ejemplar'],
         ]);
     });
-// --- fin Módulo 2 (paso 1: Autor, Editorial; paso 2: Categoría; paso 3: Libro; paso 4: Ejemplar) ---
+// --- fin Módulo 2 (paso 1: Autor, Editorial; paso 2: Categoría; paso 3: Libro; paso 4: Ejemplar;
+// paso 5: búsqueda vía query string en 'libros.index'; paso 6: 'libros.show') ---

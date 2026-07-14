@@ -3,22 +3,11 @@
 @section('titulo', 'Libros')
 
 @php
-    // Etiquetas en español para los <select> de estado/modalidad. Se definen acá (no en el
-    // modelo) porque son puramente de presentación — Ejemplar solo expone los valores canónicos
-    // (Ejemplar::ESTADOS_OPERATIVOS / MODALIDADES_ACCESO) que se usan como clave.
-    $etiquetasEstado = [
-        \App\Models\Ejemplar::ESTADO_DISPONIBLE => 'Disponible',
-        \App\Models\Ejemplar::ESTADO_PRESTADO => 'Prestado',
-        \App\Models\Ejemplar::ESTADO_EN_MOVIMIENTO_INTERNO => 'En movimiento interno',
-        \App\Models\Ejemplar::ESTADO_EN_CUSTODIA_EXTERNA => 'En custodia externa',
-        \App\Models\Ejemplar::ESTADO_MANUAL_EN_REPARACION => 'En reparación',
-        \App\Models\Ejemplar::ESTADO_MANUAL_EXTRAVIADO => 'Extraviado',
-    ];
-    $etiquetasModalidad = [
-        \App\Models\Ejemplar::MODALIDAD_LIBRE_CIRCULACION => 'Libre circulación',
-        \App\Models\Ejemplar::MODALIDAD_SOLO_SALA => 'Solo en sala',
-        \App\Models\Ejemplar::MODALIDAD_RESTRINGIDO => 'Restringido a autorización',
-    ];
+    // Etiquetas en español para los <select> de estado/modalidad. Única fuente de verdad:
+    // Ejemplar::ETIQUETAS_ESTADO / ETIQUETAS_MODALIDAD (Paso 6) — evita repetir el mismo array
+    // literal acá y en catalogo/libros/show.blade.php.
+    $etiquetasEstado = \App\Models\Ejemplar::ETIQUETAS_ESTADO;
+    $etiquetasModalidad = \App\Models\Ejemplar::ETIQUETAS_MODALIDAD;
 @endphp
 
 @section('contenido')
@@ -114,6 +103,7 @@
                     </td>
                     <td class="px-4 py-2">{{ $libro->editorial?->nombre ?? '—' }}</td>
                     <td class="px-4 py-2 text-right space-x-3">
+                        <a href="{{ route('catalogo.libros.show', $libro) }}" class="text-gray-700">Ver</a>
                         <a href="{{ route('catalogo.libros.edit', $libro) }}" class="text-blue-700">Editar</a>
                         <form method="POST" action="{{ route('catalogo.libros.destroy', $libro) }}" class="inline"
                               onsubmit="return confirm('¿Eliminar este libro?');">

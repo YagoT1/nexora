@@ -53,6 +53,24 @@ class Ejemplar extends Model
         self::MODALIDAD_RESTRINGIDO,
     ];
 
+    // Origen: Módulo 2, Paso 5 (buscador) y Paso 6 (vista de detalle de Libro). Única fuente de
+    // verdad para las etiquetas en español de estado/modalidad — evita repetir el mismo array
+    // literal en cada vista Blade que necesite mostrarlas (index y show de Libro, por ahora).
+    public const ETIQUETAS_ESTADO = [
+        self::ESTADO_DISPONIBLE => 'Disponible',
+        self::ESTADO_PRESTADO => 'Prestado',
+        self::ESTADO_EN_MOVIMIENTO_INTERNO => 'En movimiento interno',
+        self::ESTADO_EN_CUSTODIA_EXTERNA => 'En custodia externa',
+        self::ESTADO_MANUAL_EN_REPARACION => 'En reparación',
+        self::ESTADO_MANUAL_EXTRAVIADO => 'Extraviado',
+    ];
+
+    public const ETIQUETAS_MODALIDAD = [
+        self::MODALIDAD_LIBRE_CIRCULACION => 'Libre circulación',
+        self::MODALIDAD_SOLO_SALA => 'Solo en sala',
+        self::MODALIDAD_RESTRINGIDO => 'Restringido a autorización',
+    ];
+
     public const ORIGEN_COMPRA = 'compra';
     public const ORIGEN_DONACION = 'donacion';
     public const ORIGEN_OTRO = 'otro';
