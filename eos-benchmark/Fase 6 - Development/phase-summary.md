@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **verificado en verde**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Pendiente de housekeeping de git en ambos repositorios y del pre-checklist de infraestructura antes de considerarlo 100% cerrado (ver "Próximo trabajo").
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). En curso: preparación del Módulo 2 — Catálogo, mediante briefing técnico previo a cualquier implementación (instrucción explícita del responsable del proyecto).
 
 ---
 
@@ -22,7 +22,7 @@ Construir el sistema conforme al Plan de Implementación v2, módulo por módulo
 
 ### Módulo 1 — Infraestructura y autenticación: código escrito
 
-Repositorio: `sistema-gestion-bibliotecaria/` (ver `ADR-001-repositorio-de-codigo.md`).
+Repositorio: `sistema-gestion-bibliotecaria/`, subcarpeta trackeada del monorepo `nexora` (ver `ADR-001-repositorio-de-codigo.md`, enmendado por `ADR-010-monorepo-nexora-como-fuente-unica.md`).
 
 Entregado:
 
@@ -90,25 +90,29 @@ este código se ejecuta contra PHP y PostgreSQL reales desde que se escribió (v
 
 ## Próximo trabajo
 
-1. **Antes de tocar git en esta carpeta con cualquier herramienta:** en la máquina real (no en una sesión de Cowork), verificar si `proximamente/.git/index.lock` sigue presente y, si ningún proceso de git está en curso, eliminarlo. Se generó como efecto secundario de un intento de reparación en esta sesión (`ADR-003`) que confirmó que las operaciones de escritura de git no se completan de forma confiable en el mount de esta carpeta conectada.
-2. Eliminar por completo `sistema-gestion-bibliotecaria/.git` (no reparable in place — falta `objects/`, `config` ilegible) y ejecutar `git init` limpio, conforme al paso 7 de `BOOTSTRAP.md` y a `ADR-001`. Además, inicializar git en `sgb-laravel/` (el proyecto Laravel real, creado en esta sesión) — ver nota de decisión pendiente más abajo.
-3. ~~Ejecutar `sistema-gestion-bibliotecaria/docs/BOOTSTRAP.md` en un entorno con PHP 8.3 real~~ — **hecho** (ver `ADR-006`/`ADR-007`/`ADR-008`): 38/38 tests en verde.
-4. Completar el pre-checklist de infraestructura (GitHub, Render.com, HTTPS, cron, variables de entorno).
-5. Módulo 2 — Catálogo, una vez el Módulo 1 esté verificado en verde. **Ese checkpoint ya se cumplió.**
+1. ~~Housekeeping de git y consolidación de repositorio~~ — **hecho** (`ADR-009`, `ADR-010`): un
+   único repositorio (`sistema-gestion-bibliotecaria/` como subcarpeta del monorepo `nexora`),
+   publicado en `https://github.com/YagoT1/nexora.git` (commit `515c161`).
+2. ~~Verificación de integridad y cierre de `sgb-laravel/`~~ — **hecho** (adenda de cierre en
+   `ADR-009`): 0 archivos perdidos, entorno temporal eliminado.
+3. ~~Ejecutar `sistema-gestion-bibliotecaria/docs/BOOTSTRAP.md` en un entorno con PHP 8.3 real~~ —
+   **hecho** (ver `ADR-006`/`ADR-007`/`ADR-008`): 38/38 tests en verde.
+4. Completar el pre-checklist de infraestructura (Render.com, HTTPS, cron, variables de entorno) —
+   pendiente, no bloqueante para el inicio del Módulo 2. Incluye la recomendación de `ADR-010`:
+   filtrar el trigger de despliegue de Render.com por path (`sistema-gestion-bibliotecaria/**`), no
+   por cualquier push a `main` del monorepo.
+5. ~~Módulo 2 — Catálogo: briefing técnico~~ — **hecho** (`BRIEFING-MODULO-2-CATALOGO.md`): concluye
+   que hay información suficiente para iniciar la implementación (pasos 1 a 8), con una única
+   decisión pendiente y no bloqueante (R-1, historial de condición física).
 
-**Decisión de git resuelta (ver `ADR-009`):** se consolidó todo en `sistema-gestion-bibliotecaria/`,
-preservando la estructura original de `ADR-001`. Se eliminó su `.git` roto (sin `objects/`, no
-reparable in place), se copió el contenido completo de `sgb-laravel/` (excluyendo `vendor/`,
-`node_modules/`, `.env`), se regeneraron las dependencias, se re-verificó `php artisan test` desde
-la nueva ubicación (38/38, idéntico), y se hizo `git init` + commit inicial limpio (178 archivos,
-0 archivos de dependencias o secretos incluidos). Pendiente: `git remote add origin` (falta la URL
-real del repositorio) y decidir si conservar o eliminar `sgb-laravel/` (ya cumplió su propósito
-como banco de pruebas de `ADR-006`).
+### Módulo 2 — Catálogo: implementación en curso (2026-07-14)
 
-## Decisión
+Tras revisión objetiva del estado del proyecto (ver nota más abajo), se determinó que no existía
+ningún bloqueo real para iniciar la implementación y que seguir invirtiendo tiempo en tooling de
+entorno (`ADR-004`, `ADR-011`) ya no aportaba valor frente a avanzar el producto. Se inició el plan
+de implementación recomendado por el briefing:
 
-Módulo 1 pasa a estado **verificado en verde** (código, migraciones, seeders y suite de tests
-completa ejecutados con éxito contra PHP 8.5 y PostgreSQL 16 reales) **y con su repositorio git
-consolidado y funcional** (`ADR-009`). Queda pendiente, antes de un cierre 100% formal: conectar
-el remoto de GitHub y completar el pre-checklist de infraestructura (punto 4) — ninguno de los dos
-bloquea el inicio del Módulo 2.
+- **Paso 1 (Autor, Editorial) — código escrito:** `AutorController`, `EditorialController`
+  (namespace `App\Http\Controllers\Catalogo`), rutas bajo `catalogo.*` con middleware
+  `role:administrador,personal` (Modelo de Dominio v2, 6.1: Voluntario no gestiona catálogo),
+  vistas Blade + Alpine siguiendo la convención de `admin.users.*`, y enlac

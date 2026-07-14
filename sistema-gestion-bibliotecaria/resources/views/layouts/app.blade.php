@@ -21,6 +21,10 @@
 
             <div class="hidden sm:flex sm:items-center sm:space-x-6">
                 @auth
+                    {{-- Modelo de Dominio v2, 6.1: "Gestionar catálogo y ejemplares" -> Administrador y Personal. --}}
+                    @if (auth()->user()->esAdministrador() || auth()->user()->esPersonal())
+                        <a href="{{ route('catalogo.autores.index') }}" class="text-sm">Catálogo</a>
+                    @endif
                     @if (auth()->user()->esAdministrador())
                         <a href="{{ route('admin.users.index') }}" class="text-sm">Administración</a>
                     @endif
@@ -35,6 +39,9 @@
 
         <div class="sm:hidden pb-4" x-show="menuAbierto" x-cloak>
             @auth
+                @if (auth()->user()->esAdministrador() || auth()->user()->esPersonal())
+                    <a href="{{ route('catalogo.autores.index') }}" class="block py-2 text-sm">Catálogo</a>
+                @endif
                 @if (auth()->user()->esAdministrador())
                     <a href="{{ route('admin.users.index') }}" class="block py-2 text-sm">Administración</a>
                 @endif
