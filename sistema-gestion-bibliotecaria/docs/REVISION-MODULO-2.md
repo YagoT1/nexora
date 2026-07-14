@@ -48,9 +48,11 @@ completo, corrección y 4 tests de regresión nuevos en
 
 **Segunda ejecución real (2026-07-14),** tras pushear ese fix: `1 failed, 30 passed (85
 assertions)`. Un segundo defecto, distinto, en el mismo método (`wherePivotNull()` no es válido
-dentro de un closure `whereHas()`) — corregido, ver la actualización del mismo ADR-012. **Esa
-re-ejecución todavía no se realizó** — el módulo permanece "código corregido, no cerrado" hasta
-obtener 31 tests en verde.
+dentro de un closure `whereHas()`) — corregido, ver la actualización del mismo ADR-012.
+
+**Tercera ejecución real (2026-07-14), tras pushear ese segundo fix: `31 passed (87 assertions)`,
+sin fallos.** Con esta evidencia, el Módulo 2 — Catálogo queda **cerrado**, con el mismo estándar
+de validación que el Módulo 1 (`ADR-006`).
 
 ---
 

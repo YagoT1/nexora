@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). En curso: preparación del Módulo 2 — Catálogo, mediante briefing técnico previo a cualquier implementación (instrucción explícita del responsable del proyecto).
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: definir el alcance del Módulo 3 conforme al orden de dependencias de DA-08.
 
 ---
 
@@ -339,19 +339,18 @@ pendientes (`ADR-011`, pasos 3-9 de 9) son mejoras de entorno de desarrollo, no 
 roadmap. Se decidió pausar ese tooling sin cerrarlo (queda documentado y retomable) y avanzar
 directamente con la implementación del Módulo 2 — Catálogo.
 
-**Módulo 2 — Catálogo (2026-07-14): código completo, Pasos 1 a 8, con dos ejecuciones reales y dos
-defectos corregidos.** Los 8 pasos del plan de implementación recomendado por
-`BRIEFING-MODULO-2-CATALOGO.md` están escritos: CRUD de Autor, Editorial, Categoría (con validación
-de profundidad máxima bidireccional), Libro y Ejemplar; búsqueda de catálogo; vista de detalle de
-Libro; validación RN-21; y la suite de tests Feature correspondiente. Se obtuvieron dos ejecuciones
-reales sucesivas (`php artisan test --filter=Catalogo`, entorno del usuario): la primera,
-`1 failed, 26 passed`, reveló un nombre de columna incorrecto en las relaciones pivote de movimiento
-interno/custodia externa (defecto preexistente del Módulo 1, corregido en `ADR-012`); la segunda,
-tras pushear ese fix, `1 failed, 30 passed`, reveló un segundo defecto distinto en el mismo método
-(`wherePivotNull()` inválido dentro de un closure `whereHas()`, preexistente desde el Paso 5,
-también corregido — ver actualización de `ADR-012`). **Esa segunda corrección todavía no se
-re-ejecutó** — hasta obtener esa confirmación en verde (31 tests esperados), el Módulo 2 se
-considera **código corregido, no cerrado**. Único punto diferido, no bloqueante: R-1 (historial de
-condición física por ejemplar), pendiente de una decisión de diseño (entidad versionada vs.
-sobrescritura de campo) que no corresponde tomar unilateralmente — ver
-`BRIEFING-MODULO-2-CATALOGO.md`, sección "Recomendación".
+**Módulo 2 — Catálogo: cerrado (2026-07-14).** Los 8 pasos del plan de implementación recomendado
+por `BRIEFING-MODULO-2-CATALOGO.md` están completos: CRUD de Autor, Editorial, Categoría (con
+validación de profundidad máxima bidireccional), Libro y Ejemplar; búsqueda de catálogo; vista de
+detalle de Libro; validación RN-21; y la suite de tests Feature correspondiente. Se obtuvieron tres
+ejecuciones reales sucesivas (`php artisan test --filter=Catalogo`, entorno del usuario, el mismo
+que validó el Módulo 1): la primera (`1 failed, 26 passed`) y la segunda (`1 failed, 30 passed`)
+revelaron dos defectos reales y distintos en el mismo método (`Libro::scopeConEstado()` /
+`Ejemplar::movimientosInternos()`-`custodiasExternas()`), ambos preexistentes — uno del Módulo 1, el
+otro del Paso 5 de este módulo — y ninguno introducido por las correcciones mismas. Corregidos y
+documentados en `ADR-012`. La tercera ejecución, tras pushear ambos fixes: **`31 passed (87
+assertions)`, sin fallos.** El Módulo 2 cumple el mismo estándar de cierre que el Módulo 1
+(`ADR-006`): código completo, ejecutado contra PHP/PostgreSQL reales, suite en verde. Único punto
+diferido, no bloqueante: R-1 (historial de condición física por ejemplar), pendiente de una
+decisión de diseño (entidad versionada vs. sobrescritura de campo) que no corresponde tomar
+unilateralmente — ver `BRIEFING-MODULO-2-CATALOGO.md`, sección "Recomendación".

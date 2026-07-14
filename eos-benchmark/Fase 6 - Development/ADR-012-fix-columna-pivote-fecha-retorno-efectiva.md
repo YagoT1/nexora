@@ -1,6 +1,6 @@
 # ADR-012 — Corrección: nombre de columna incorrecto en las relaciones pivote de movimiento interno y custodia externa
 
-**Estado:** Código corregido, con una segunda corrección relacionada (ver actualización) — pendiente de verificación con evidencia objetiva.
+**Estado:** Resuelta — verificada con evidencia objetiva (ver actualización final: `31 passed`).
 **Fecha:** 2026-07-14
 **Detectado por:** Primera ejecución real de `php artisan test --filter=Catalogo` sobre el Módulo 2, ejecutada por la Comisión Directiva en su propio entorno (el mismo que validó el Módulo 1, `ADR-006`/`ADR-007`/`ADR-008`). Es exactamente el tipo de hallazgo que `ADR-002` anticipó como riesgo aceptado de entregar código sin ejecución previa en este sandbox.
 
@@ -85,8 +85,23 @@ Se corrige referenciando la columna de la tabla pivote de forma calificada (`'ej
 
 ### Verificación
 
-**Antes de esta segunda corrección:** `1 failed, 30 passed (85 assertions)` (evidencia real, entorno del usuario, 2026-07-14, segunda ejecución). **Después:** corregido en esta sesión, todavía no re-ejecutado contra el entorno real (misma limitación de `ADR-002`). Se esperan 31 tests en verde. El Módulo 2 permanece "código corregido, no cerrado" hasta obtener esa confirmación.
+**Antes de esta segunda corrección:** `1 failed, 30 passed (85 assertions)` (evidencia real, entorno del usuario, 2026-07-14, segunda ejecución).
 
 ### Consecuencias
 
 - Confirma, con un segundo caso en el mismo ADR, el patrón ya señalado: `Libro::scopeConEstado()` reproduce en SQL una lógica que en `Ejemplar` está en PHP, y esa traducción tiene su propia superficie de error independiente de que la lógica de negocio original sea correcta — no alcanza con que el método fuente (`estadoActual()`) esté bien para asumir que su traducción a SQL también lo está. Cualquier cambio futuro a `estadoActual()`/`tieneMovimientoActivo()` que introduzca patrones nuevos de pivote debe re-verificar explícitamente que su traducción en `scopeConEstado()` use APIs válidas en ese contexto (columnas calificadas, no métodos de conveniencia de relación), no solo que el nombre de columna coincida.
+
+---
+
+## Verificación final (2026-07-14) — Tercera ejecución real: en verde
+
+Tras pushear la segunda corrección, la Comisión Directiva corrió `php artisan test --filter=Catalogo` por tercera vez:
+
+```
+Tests: 31 passed (87 assertions)
+Duration: 8.55s
+```
+
+Los 27 tests originales del Paso 8, más los 4 tests de regresión agregados por esta corrección (2 en `EjemplarEstadoTest` que cierran la cobertura de RN-04 para movimiento interno/custodia externa, 1 en `EjemplarEstadoTest` para el caso "disponible" sin movimientos, 1 en `BusquedaCatalogoTest` para el filtro `estado=disponible`), todos en verde. Ambos defectos descritos en este ADR quedan corregidos y verificados con evidencia objetiva real — no solo código revisado estáticamente.
+
+Con esto, el Módulo 2 — Catálogo cumple el mismo estándar de cierre que el Módulo 1 (`ADR-006`): código completo, ejecutado contra PHP/PostgreSQL reales, con su suite de tests en verde. Ver `phase-summary.md` para la declaración formal de cierre del módulo.
