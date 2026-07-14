@@ -4,6 +4,8 @@
 @section('titulo', 'Categorías')
 
 @section('contenido')
+    @include('catalogo._subnav')
+
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold">Categorías</h1>
         <a href="{{ route('catalogo.categorias.create') }}" class="rounded bg-gray-900 text-white text-sm px-4 py-2">
@@ -49,6 +51,4 @@
             </div>
         @empty
             <p class="text-gray-500 text-sm">No hay categorías cargadas.</p>
-        @endforelse
-    </div>
-@endsection
+        @

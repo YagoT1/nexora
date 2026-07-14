@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Catalogo\AutorController;
 use App\Http\Controllers\Catalogo\CategoriaController;
 use App\Http\Controllers\Catalogo\EditorialController;
+use App\Http\Controllers\Catalogo\LibroController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,5 +45,4 @@ Route::middleware(['auth', 'role:administrador'])
 //
 // Nota técnica: se fija explícitamente el nombre del parámetro de cada resource route
 // ('parameters' => [...]) en lugar de dejar que Laravel lo derive automáticamente de la URI en
-// plural. El singularizador de Laravel (Illuminate\Support\Pluralizer, Doctrine Inflector, reglas
-// en ingl
+// plural. El singularizador de Laravel (Illuminate\Suppor

@@ -136,8 +136,20 @@ de implementación recomendado por el briefing:
     en las tres rutas, eliminando la dependencia de esa inferencia. No amerita una ADR propia: es
     una corrección de implementación dentro del mismo trabajo en curso, sin impacto en ninguna
     decisión de arquitectura ya aprobada.
-- **Pasos 3 a 8 (Libro, Ejemplar, búsqueda, vista de detalle, RN-21, tests): pendientes**, en ese
-  orden, conforme al plan del briefing.
+- **Paso 3 (Libro) — código escrito:** `LibroController` + `LibroRequest`. Autores y categorías se
+  sincronizan como relaciones M:N (`sync()`), separadas de los campos propios de `libros`. Fiel al
+  Modelo de Dominio v2 (1.1): "autores" queda opcional y sin mínimo — el propio dominio aclara que
+  "un libro puede no tener autor identificable (recopilaciones, obras anónimas)" — no se inventó un
+  requisito de mínimo 1 autor que el dominio no exige, pese a que el criterio de aceptación del
+  módulo solo ejemplifica el caso con autores cargados. `destroy()` bloquea el borrado de un Libro
+  con Ejemplares asociados (D-02); los pivotes `libro_autor`/`libro_categoria` sí tienen
+  `cascadeOnDelete()` a nivel de base de datos, sin necesidad de `detach()` manual. La ruta `show`
+  queda deliberadamente sin habilitar hasta el Paso 6 (la vista de detalle depende de Ejemplar,
+  Paso 4, para listar estados). Se agregó una sub-navegación (`catalogo/_subnav.blade.php`) entre
+  Libros/Autores/Editoriales/Categorías, y el enlace principal "Catálogo" del layout ahora apunta a
+  Libros (antes apuntaba a Autores, provisorio del Paso 1).
+- **Pasos 4 a 8 (Ejemplar, búsqueda, vista de detalle, RN-21, tests): pendientes**, en ese orden,
+  conforme al plan del briefing.
 
 **No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
 código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo

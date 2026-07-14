@@ -4,6 +4,8 @@
 @section('titulo', 'Autores')
 
 @section('contenido')
+    @include('catalogo._subnav')
+
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold">Autores</h1>
         <a href="{{ route('catalogo.autores.create') }}" class="rounded bg-gray-900 text-white text-sm px-4 py-2">
@@ -42,5 +44,4 @@
         </tbody>
     </table>
 
-    <div class="mt-4">{{ $autores->links() }}</div>
-@endsection
+    <div class="mt-4">{{ $auto
