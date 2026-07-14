@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Catalogo\AutorController;
+use App\Http\Controllers\Catalogo\CategoriaController;
 use App\Http\Controllers\Catalogo\EditorialController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -40,11 +41,8 @@ Route::middleware(['auth', 'role:administrador'])
 
 // --- Módulo 2 (Catálogo) — en construcción, ver Fase 6 - Development/BRIEFING-MODULO-2-CATALOGO.md ---
 // Acceso: Administrador y Personal (Modelo de Dominio v2, 6.1: Voluntario no gestiona catálogo).
-Route::middleware(['auth', 'role:administrador,personal'])
-    ->prefix('catalogo')
-    ->name('catalogo.')
-    ->group(function () {
-        Route::resource('autores', AutorController::class)->except('show');
-        Route::resource('editoriales', EditorialController::class)->except('show');
-    });
-// --- fin Módulo 2 (paso 1: Autor, Editorial) ---
+//
+// Nota técnica: se fija explícitamente el nombre del parámetro de cada resource route
+// ('parameters' => [...]) en lugar de dejar que Laravel lo derive automáticamente de la URI en
+// plural. El singularizador de Laravel (Illuminate\Support\Pluralizer, Doctrine Inflector, reglas
+// en ingl
