@@ -1,10 +1,10 @@
 <?php
 
-// Origen: preparación de revisión funcional del Módulo 2 — Catálogo (Pasos 1 a 4: Autor, Editorial,
-// Categoría, Libro, Ejemplar). Datos ficticios pensados para ejercitar, con un solo `php artisan
-// db:seed`, los casos que el Plan de Implementación v2 y el Modelo de Dominio v2 marcan como
-// relevantes — no son datos reales de ninguna biblioteca. SOLO para desarrollo/staging, igual que
-// AdminUserSeeder (nunca corre en producción).
+// Origen: preparación de revisión funcional del Módulo 2 — Catálogo (Pasos 1 a 7: Autor, Editorial,
+// Categoría, Libro, Ejemplar, búsqueda, vista de detalle, RN-21). Datos ficticios pensados para
+// ejercitar, con un solo `php artisan db:seed`, los casos que el Plan de Implementación v2 y el
+// Modelo de Dominio v2 marcan como relevantes — no son datos reales de ninguna biblioteca. SOLO
+// para desarrollo/staging, igual que AdminUserSeeder (nunca corre en producción).
 //
 // Casos cubiertos deliberadamente:
 // - Categoría de primer nivel CON subcategorías (Ficción -> Cuento, Novela) y una SIN
@@ -15,6 +15,9 @@
 // - ISBN presente en un libro y ausente en otro (D-07: no es identificador único, no obligatorio).
 // - Las tres modalidades de acceso y los dos estados manuales de Ejemplar, más orígenes distintos
 //   (compra/donación), para poder ver cada valor reflejado en la pantalla de gestión de ejemplares.
+// - Un Socio y una Reserva 'pendiente' sobre "Ficciones" (Paso 7, RN-21) — el mínimo indispensable
+//   de Módulo 2 (Socio/Reserva ya existen como modelos desde Módulo 1) para poder ejercitar la
+//   alerta de RN-21 sin construir ninguna pantalla de gestión de reservas (eso es Módulo 5).
 
 namespace Database\Seeders;
 
@@ -23,6 +26,9 @@ use App\Models\Categoria;
 use App\Models\Editorial;
 use App\Models\Ejemplar;
 use App\Models\Libro;
+use App\Models\Reserva;
+use App\Models\Socio;
+use App\Models\TipoSocio;
 use Illuminate\Database\Seeder;
 
 class CatalogoDemoSeeder extends Seeder
@@ -101,6 +107,29 @@ class CatalogoDemoSeeder extends Seeder
             'fecha_ingreso' => '2015-02-01',
             'origen' => Ejemplar::ORIGEN_DONACION,
         ]);
+
+        // Paso 7 (RN-21): una reserva 'pendiente' sobre "Ficciones", que en este momento SÍ tiene un
+        // ejemplar libre_circulacion capaz de satisfacerla (el de compra, arriba). La alerta de
+        // RN-21 no dispara todavía — se dispara recién si, desde la UI, se cambia la modalidad de ese
+        // ejemplar a "Solo sala" (dejando los dos ejemplares de Ficciones sin ninguno que pueda
+        // salir de la biblioteca). Elegido así a propósito para poder revisar el "antes" y el
+        // "después" del mismo caso sin datos adicionales.
+        $tipoEstandar = TipoSocio::firstOrCreate(
+            ['nombre' => 'Estándar'],
+            ['limite_prestamos_simultaneos' => 3, 'sujeto_a_restriccion_automatica' => true]
+        );
+        $socioDemo = Socio::firstOrCreate(
+            ['dni' => '00000000'],
+            [
+                'nombre_principal' => 'Socio de prueba (RN-21)',
+                'fecha_alta' => '2020-01-01',
+                'tipo_socio_id' => $tipoEstandar->id,
+            ]
+        );
+        Reserva::firstOrCreate(
+            ['libro_id' => $ficciones->id, 'socio_id' => $socioDemo->id],
+            ['fecha_reserva' => now()->toDateString(), 'estado' => 'pendiente']
+        );
     }
 
     /**

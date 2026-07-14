@@ -3,7 +3,7 @@
 // Origen: Plan de Implementación v2, Módulo 2 — Catálogo, "CRUD de Ejemplar". Ruta anidada bajo
 // Libro (catalogo.libros.ejemplares.*): un Ejemplar siempre existe en el contexto de un Libro. Sin
 // 'index'/'show' propios: el listado de ejemplares de un Libro es responsabilidad de la vista de
-// detalle de Libro (Paso 6 del briefing), que todavía no existe.
+// detalle de Libro (catalogo.libros.show, Paso 6).
 
 namespace App\Http\Controllers\Catalogo;
 
@@ -24,7 +24,7 @@ class EjemplarController extends Controller
         $libro->ejemplares()->create($request->validated());
 
         return redirect()
-            ->route('catalogo.libros.edit', $libro)
+            ->route('catalogo.libros.show', $libro)
             ->with('status', 'Ejemplar creado correctamente.');
     }
 
@@ -35,15 +35,29 @@ class EjemplarController extends Controller
         return view('catalogo.ejemplares.edit', compact('libro', 'ejemplar'));
     }
 
+    /**
+     * Paso 7 del briefing (RN-21): si este cambio de modalidad deja reservas 'pendiente' del Libro
+     * sin ningún ejemplar capaz de satisfacerlas, se alerta al personal en el mismo mensaje de
+     * confirmación. RN-21 no exige bloquear el cambio ni cancelar las reservas automáticamente —
+     * "el sistema alerta al personal para que cancele y gestione esas reservas manualmente": la
+     * gestión de la reserva en sí es responsabilidad del Módulo 5, todavía no construido.
+     */
     public function update(EjemplarRequest $request, Libro $libro, Ejemplar $ejemplar)
     {
         $this->verificarPertenencia($libro, $ejemplar);
 
+        $modalidadAnterior = $ejemplar->modalidad_acceso;
         $ejemplar->update($request->validated());
 
+        $mensaje = 'Ejemplar actualizado correctamente.';
+        if ($ejemplar->modalidad_acceso !== $modalidadAnterior && $this->dejaReservasSinSatisfacer($libro)) {
+            $mensaje .= ' Atención (RN-21): este libro tiene reservas pendientes y, tras este '
+                .'cambio, ningún ejemplar puede satisfacerlas — gestione esas reservas manualmente.';
+        }
+
         return redirect()
-            ->route('catalogo.libros.edit', $libro)
-            ->with('status', 'Ejemplar actualizado correctamente.');
+            ->route('catalogo.libros.show', $libro)
+            ->with('status', $mensaje);
     }
 
     /**
@@ -63,8 +77,24 @@ class EjemplarController extends Controller
         $ejemplar->delete();
 
         return redirect()
-            ->route('catalogo.libros.edit', $libro)
+            ->route('catalogo.libros.show', $libro)
             ->with('status', 'Ejemplar eliminado correctamente.');
+    }
+
+    /**
+     * RN-21: el Libro tiene reservas en estado 'pendiente' (textual: "reservas Pendientes", no se
+     * incluye 'personal_alertado' u otros estados — la regla habla puntualmente de pendientes) Y
+     * ninguno de sus ejemplares puede salir de la biblioteca (Ejemplar::puedeSalirDeLaBiblioteca(),
+     * RN-08/RN-09) para satisfacerlas.
+     */
+    private function dejaReservasSinSatisfacer(Libro $libro): bool
+    {
+        if (! $libro->reservas()->where('estado', 'pendiente')->exists()) {
+            return false;
+        }
+
+        return $libro->ejemplares
+            ->doesntContain(fn (Ejemplar $candidato) => $candidato->puedeSalirDeLaBiblioteca());
     }
 
     /**

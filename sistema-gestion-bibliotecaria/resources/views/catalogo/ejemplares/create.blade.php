@@ -13,7 +13,7 @@
 
         <div class="flex gap-3">
             <button type="submit" class="rounded bg-gray-900 text-white text-sm px-4 py-2">Crear ejemplar</button>
-            <a href="{{ route('catalogo.libros.edit', $libro) }}" class="text-sm text-gray-500 self-center">Volver al libro</a>
+            <a href="{{ route('catalogo.libros.show', $libro) }}" class="text-sm text-gray-500 self-center">Volver al libro</a>
         </div>
     </form>
 @endsection

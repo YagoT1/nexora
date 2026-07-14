@@ -34,6 +34,14 @@ class Libro extends Model
         return $this->hasMany(Ejemplar::class);
     }
 
+    // Origen: Modelo de Dominio v2, 3.3 "Reserva" (Reserva::libro() ya existe como belongsTo desde
+    // el Módulo 1). Se agrega la inversa acá porque el Paso 7 (RN-21) necesita consultar, desde un
+    // Libro, si tiene reservas en estado 'pendiente' sin tocar el modelo Reserva (Módulo 5).
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class);
+    }
+
     /**
      * Origen: Plan de Implementación v2, Módulo 2 — Catálogo, "Búsqueda de catálogo: ... estado".
      * Filtra libros con al menos un ejemplar en el estado operativo indicado (D-09: el estado no es

@@ -149,6 +149,34 @@ class Ejemplar extends Model
     }
 
     /**
+     * RN-08/RN-09: si el ejemplar puede salir de la biblioteca (préstamo domiciliario, préstamo
+     * institucional, custodia externa, o movimiento interno que implique salida). "Libre
+     * circulación" siempre puede (RN-08 por omisión); "Solo sala" nunca puede (RN-08 explícito);
+     * "Restringido a autorización" solo puede si existe, PARA ESTE EJEMPLAR PUNTUAL, una
+     * ExcepcionAutorizada vigente de tipo autorizacion_salida_material_restringido (RN-09, RN-10,
+     * RN-11). Se reutiliza `ExcepcionAutorizada::estaVigente()` en vez de duplicar acá el cálculo de
+     * vigencia (estado + fecha_fin) — mismo criterio que evitó duplicar estadoActual() en el Paso 5.
+     *
+     * Origen del uso: Paso 7 del briefing (RN-21, alerta al cambiar modalidad con reservas
+     * pendientes). Se define acá, en el modelo, y no en el controlador, porque Módulo 4 (préstamos)
+     * va a necesitar exactamente esta misma verificación antes de autorizar cualquier salida.
+     */
+    public function puedeSalirDeLaBiblioteca(): bool
+    {
+        return match ($this->modalidad_acceso) {
+            self::MODALIDAD_LIBRE_CIRCULACION => true,
+            self::MODALIDAD_SOLO_SALA => false,
+            self::MODALIDAD_RESTRINGIDO => ExcepcionAutorizada::query()
+                ->where('entidad_afectada_type', self::class)
+                ->where('entidad_afectada_id', $this->id)
+                ->where('tipo', ExcepcionAutorizada::TIPO_AUTORIZACION_MATERIAL_RESTRINGIDO)
+                ->get()
+                ->contains(fn (ExcepcionAutorizada $excepcion) => $excepcion->estaVigente()),
+            default => false,
+        };
+    }
+
+    /**
      * D-09: estado operativo. Los estados derivados (prestado / en_movimiento_interno /
      * en_custodia_externa) NUNCA se leen de una columna: se calculan aquí. Disponible es el default
      * cuando no hay estado manual ni movimiento activo.

@@ -1,4 +1,4 @@
-# Guía de revisión funcional — Módulo 2 (Catálogo), Pasos 1 a 6
+# Guía de revisión funcional — Módulo 2 (Catálogo), Pasos 1 a 7
 
 Este documento prepara la revisión funcional de lo entregado hasta ahora del Módulo 2 — Catálogo
 (Autor, Editorial, Categoría, Libro, Ejemplar). No reemplaza `docs/BOOTSTRAP.md`: asume que ya
@@ -58,6 +58,12 @@ Elegidos para ejercitar los casos que importan, no como catálogo realista:
 Categorías: "Ficción" y "No Ficción" son de primer nivel; "Cuento" y "Novela" son subcategorías de
 "Ficción" — esto deja armado el caso de jerarquía de 2 niveles sin necesidad de cargarlo a mano.
 
+Además, para poder revisar RN-21 (Paso 7): un Socio ("Socio de prueba (RN-21)", DNI `00000000`) con
+una Reserva en estado `pendiente` sobre "Ficciones". Con los datos del seeder tal cual vienen, esa
+reserva SÍ puede satisfacerse (el ejemplar de compra es libre circulación) — la alerta de RN-21 se
+dispara recién si, desde la UI, cambiás la modalidad de ESE ejemplar a "Solo sala" (ver punto 7 de
+la tabla de la sección 4).
+
 ---
 
 ## 4. Checklist de criterios de aceptación (Plan de Implementación v2, Módulo 2)
@@ -72,9 +78,9 @@ Cada fila indica si ya se puede revisar con lo entregado o si depende de un paso
 | 4 | "La vista del Libro muestra correctamente el estado 'Prestado' para un ejemplar con préstamo activo, sin necesidad de campo de estado explícito." | **Parcial** — `Ejemplar::estadoActual()` ya calcula "prestado" leyendo la tabla `prestamos_domiciliarios`, y la vista de detalle de Libro (`catalogo.libros.show`, Paso 6) ya muestra el resultado de ese método para cada ejemplar. Pero no hay ninguna pantalla todavía para *crear* un préstamo (Módulo 4, no iniciado), así que no se puede disparar este caso completo desde la UI. | Si querés verificarlo igual: insertar manualmente una fila en `prestamos_domiciliarios` con `estado = 'activo'` para uno de los ejemplares del seeder (por `psql` o el cliente que uses) y recargar `catalogo.libros.show` del Libro correspondiente — debería mostrar "Prestado" en la columna Estado. |
 | 5 | "La búsqueda por título parcial devuelve resultados relevantes. La búsqueda por autor devuelve todos los libros del autor." | **Sí** | Catálogo → Libros → probar el formulario de búsqueda: "cien" en Título debería devolver "Cien años de soledad"; "Borges" en Autor debería devolver "Ficciones". Combinar con Categoría/Estado/Modalidad para verificar que los filtros se combinan con AND (por ejemplo, Categoría "Ficción" + Estado "Disponible" debería excluir el ejemplar "solo sala" de Ficciones si ya está prestado, y mostrar solo los disponibles). "Limpiar filtros" debe volver al listado completo. |
 | 6 | "Un ejemplar con estado manual 'En reparación' muestra ese estado aunque no tenga movimiento activo." | **Sí** | Catálogo → Libros → Ver "Rayuela" → el ejemplar cargado por el seeder ya muestra "En reparación" en la columna Estado, sin tener ningún préstamo asociado. |
-| 7 | "Al intentar cambiar la modalidad de acceso del único ejemplar disponible de un Libro con reservas Pendientes a Solo sala, el sistema muestra una alerta..." | **No** — Paso 7 (validación RN-21) todavía no está implementado; tampoco existe aún la gestión de Reservas (Módulo 5). | — |
+| 7 | "Al intentar cambiar la modalidad de acceso del único ejemplar disponible de un Libro con reservas Pendientes a Solo sala, el sistema muestra una alerta..." | **Sí** | Catálogo → Libros → Ver "Ficciones" → Editar el ejemplar de compra (libre circulación) → cambiar su modalidad a "Solo sala" → Guardar. El mensaje de confirmación debe incluir la advertencia de RN-21 (ya no queda ningún ejemplar de "Ficciones" que pueda salir de la biblioteca, y la Reserva sembrada sigue `pendiente`). Revertir el cambio deja de mostrar la advertencia en la siguiente edición que no toque la modalidad. |
 
-**Resumen:** de los 7 criterios de aceptación del módulo, 4 son totalmente revisables hoy (1, 3, 5, 6), 1 es parcialmente revisable con una verificación manual en la base de datos (4), y 1 depende de un paso aún no implementado (7 RN-21 — el criterio 2 de la tabla del plan ya está cubierto arriba).
+**Resumen:** de los 7 criterios de aceptación del módulo, 5 son totalmente revisables hoy (1, 3, 5, 6, 7), y 1 es parcialmente revisable con una verificación manual en la base de datos (4) — el criterio 2 de la tabla del plan ya está cubierto arriba.
 
 ---
 
@@ -92,6 +98,10 @@ Cada fila indica si ya se puede revisar con lo entregado o si depende de un paso
   de "Editar") lleva a `catalogo.libros.show`, que reemplaza la gestión provisoria de ejemplares que
   hasta el Paso 5 vivía en la pantalla de edición. La pantalla de edición ahora solo edita los
   campos propios del Libro, con un enlace "Ver detalle y ejemplares →" hacia `show`.
+- **Corrección post-Paso 6 (Paso 7):** crear, editar y eliminar un Ejemplar, y el enlace "Volver al
+  libro" de esas pantallas, ahora redirigen a `catalogo.libros.show` en vez de a `catalogo.libros.edit`
+  (que desde el Paso 6 ya no lista ejemplares). Si notás algún enlace que todavía apunte a `edit`
+  después de gestionar un ejemplar, es justamente el defecto que esta corrección debía eliminar.
 
 ---
 

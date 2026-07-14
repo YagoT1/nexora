@@ -200,7 +200,32 @@ de implementación recomendado por el briefing:
     ahora solo edita los campos propios del Libro y enlaza a `show`.
   - No amerita ADR: implementación directa de CU-4 del briefing, sin impacto en arquitectura,
     dominio o roadmap.
-- **Pasos 7 y 8 (RN-21, tests): pendientes**, en ese orden, conforme al plan del briefing.
+- **Paso 7 (Validación RN-21) — código escrito:** al cambiar la modalidad de acceso de un
+  Ejemplar (`EjemplarController::update()`), si el Libro tiene reservas en estado `pendiente` y,
+  tras el cambio, ningún ejemplar del libro puede ya satisfacerlas, se agrega una advertencia al
+  mensaje de confirmación (RN-21 no exige bloquear el cambio ni cancelar la reserva automáticamente
+  — exige alertar al personal para que la gestione manualmente; no hay entidad de
+  Notificación/Alerta en el Modelo de Dominio v2, D-08 la descarta explícitamente para la primera
+  versión, así que el mensaje flash de la propia acción es el mecanismo correcto en este alcance).
+  - `Ejemplar::puedeSalirDeLaBiblioteca()` (nuevo): implementa RN-08 (Solo sala nunca sale) y RN-09
+    (Restringido a autorización solo sale con una `ExcepcionAutorizada` vigente para ese ejemplar
+    puntual, reutilizando `ExcepcionAutorizada::estaVigente()` sin duplicar su cálculo de vigencia).
+    Se definió en el modelo, no en el controlador, porque el Módulo 4 (préstamos) va a necesitar la
+    misma verificación antes de autorizar cualquier salida — mismo criterio que las relaciones
+    nombradas del Paso 5.
+  - `Libro::reservas()` (nuevo): inversa de `Reserva::libro()`, que ya existía desde el Módulo 1.
+  - **Corrección de una inconsistencia post-Paso 6:** los redirects de `EjemplarController`
+    (`store`, `update`, `destroy`) y los enlaces "Volver al libro" de las vistas de Ejemplar seguían
+    apuntando a `catalogo.libros.edit`, que desde el Paso 6 ya no lista ejemplares. Se corrigieron
+    los cuatro puntos para apuntar a `catalogo.libros.show`, que es donde vive esa información
+    ahora. Se documenta como corrección porque debería haberse hecho en el Paso 6 mismo.
+  - **Dato de prueba agregado a `CatalogoDemoSeeder`:** un `Socio` y una `Reserva` en estado
+    `pendiente` sobre "Ficciones" (que hoy sí tiene un ejemplar libre_circulacion capaz de
+    satisfacerla), para poder ejercitar el caso "antes/después" de RN-21 desde la UI cambiando la
+    modalidad de ese ejemplar a Solo sala, sin necesidad de construir ninguna pantalla de Módulo 5.
+  - No amerita ADR: aplica RN-08/RN-09/RN-21 ya definidas en el dominio, sin introducir ninguna
+    entidad, tabla o decisión de arquitectura nueva.
+- **Paso 8 (tests): pendiente.**
 
 **No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
 código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo
