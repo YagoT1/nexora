@@ -148,8 +148,20 @@ de implementación recomendado por el briefing:
   Paso 4, para listar estados). Se agregó una sub-navegación (`catalogo/_subnav.blade.php`) entre
   Libros/Autores/Editoriales/Categorías, y el enlace principal "Catálogo" del layout ahora apunta a
   Libros (antes apuntaba a Autores, provisorio del Paso 1).
-- **Pasos 4 a 8 (Ejemplar, búsqueda, vista de detalle, RN-21, tests): pendientes**, en ese orden,
-  conforme al plan del briefing.
+- **Paso 4 (Ejemplar) — código escrito:** `EjemplarController` + `EjemplarRequest`, ruta anidada
+  bajo Libro (`catalogo.libros.ejemplares.*`, sin `index`/`show` propios — D-02: el Ejemplar
+  siempre existe en el contexto de un Libro). Se agregaron constantes en `Ejemplar`
+  (`ESTADOS_MANUALES`, `MODALIDADES_ACCESO`, `ORIGENES`) para no repetir strings mágicos, mismo
+  patrón que `User::ROL_*`. `destroy()` bloquea el borrado de un Ejemplar con movimiento activo
+  (`tieneMovimientoActivo()`, RN-04) — salvaguarda no derivada explícitamente de una RN/DA, mismo
+  criterio que `ADR-003`. Verificación de pertenencia Ejemplar↔Libro explícita en el controlador
+  (`abort_unless`) en vez de depender del scoping automático de rutas anidadas de Laravel, no
+  verificable en este entorno (mismo criterio que el fix de nombres de parámetro del Paso 2). La
+  pantalla de edición de Libro (`catalogo.libros.edit`) hace de punto de gestión provisorio de sus
+  ejemplares (listado + alta + edición) hasta que el Paso 6 la reemplace por la vista de detalle
+  definitiva con búsqueda y estado.
+- **Pasos 5 a 8 (búsqueda, vista de detalle, RN-21, tests): pendientes**, en ese orden, conforme al
+  plan del briefing.
 
 **No ejecutado ni testeado todavía** (mismo patrón documentado para Módulo 1 en `ADR-002`): este
 código debe validarse en un entorno real (`docker-compose up`, `php artisan test`) antes de darlo

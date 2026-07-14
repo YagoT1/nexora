@@ -14,6 +14,37 @@ class Ejemplar extends Model
 {
     protected $table = 'ejemplares';
 
+    // Constantes agregadas en Módulo 2 (Catálogo) para no repetir strings mágicos en
+    // EjemplarRequest/vistas — mismo patrón que User::ROL_*/ROLES. Los valores coinciden
+    // exactamente con los ya usados por la migración 2024_01_01_000090_create_ejemplares_table.
+    public const ESTADO_MANUAL_EN_REPARACION = 'en_reparacion';
+    public const ESTADO_MANUAL_EXTRAVIADO = 'extraviado';
+
+    public const ESTADOS_MANUALES = [
+        self::ESTADO_MANUAL_EN_REPARACION,
+        self::ESTADO_MANUAL_EXTRAVIADO,
+    ];
+
+    public const MODALIDAD_LIBRE_CIRCULACION = 'libre_circulacion';
+    public const MODALIDAD_SOLO_SALA = 'solo_sala';
+    public const MODALIDAD_RESTRINGIDO = 'restringido_a_autorizacion';
+
+    public const MODALIDADES_ACCESO = [
+        self::MODALIDAD_LIBRE_CIRCULACION,
+        self::MODALIDAD_SOLO_SALA,
+        self::MODALIDAD_RESTRINGIDO,
+    ];
+
+    public const ORIGEN_COMPRA = 'compra';
+    public const ORIGEN_DONACION = 'donacion';
+    public const ORIGEN_OTRO = 'otro';
+
+    public const ORIGENES = [
+        self::ORIGEN_COMPRA,
+        self::ORIGEN_DONACION,
+        self::ORIGEN_OTRO,
+    ];
+
     protected $fillable = [
         'libro_id',
         'estado_manual',

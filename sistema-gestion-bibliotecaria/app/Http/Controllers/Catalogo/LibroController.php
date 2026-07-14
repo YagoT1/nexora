@@ -44,7 +44,9 @@ class LibroController extends Controller
 
     public function edit(Libro $libro)
     {
-        $libro->load('autores', 'categorias');
+        // 'ejemplares' se carga aquí porque, hasta el Paso 6 (vista de detalle de Libro), esta
+        // pantalla de edición hace también de punto de gestión de los ejemplares del libro.
+        $libro->load('autores', 'categorias', 'ejemplares');
 
         return view('catalogo.libros.edit', array_merge(
             $this->datosDeApoyoParaFormulario(),
