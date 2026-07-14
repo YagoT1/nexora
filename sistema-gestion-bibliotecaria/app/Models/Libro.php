@@ -63,20 +63,24 @@ class Libro extends Model
                 Ejemplar::ESTADO_PRESTADO => $ejemplar
                     ->whereNull('estado_manual')
                     ->whereHas('prestamosDomiciliarios', fn ($q) => $q->whereIn('estado', ['activo', 'atrasado'])),
-                // Columna real de estas dos tablas pivote: 'fecha_retorno_efectiva' (corrección
-                // 2026-07-14, ver ADR-012 — no confundir con 'fecha_devolucion_efectiva', que solo
-                // aplica a la tabla pivote de préstamos institucionales).
+                // Corrección 2026-07-14 (ver ADR-012, actualización de segunda ejecución):
+                // wherePivotNull() NO es válido dentro de un closure de whereHas() — ese closure
+                // recibe un Builder acotado al modelo relacionado (MovimientoInterno/CustodiaExterna),
+                // no la instancia de la relación BelongsToMany, así que wherePivotNull() (que solo
+                // existe en BelongsToMany) cae en el resolutor dinámico "where<Columna>" de Eloquent
+                // y genera SQL inválido. La tabla pivote sí queda unida (join) dentro de ese
+                // whereHas(), así que se referencia su columna calificada directamente.
                 Ejemplar::ESTADO_EN_MOVIMIENTO_INTERNO => $ejemplar
                     ->whereNull('estado_manual')
-                    ->whereHas('movimientosInternos', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva')),
+                    ->whereHas('movimientosInternos', fn ($q) => $q->whereNull('ejemplares_movimiento_interno.fecha_retorno_efectiva')),
                 Ejemplar::ESTADO_EN_CUSTODIA_EXTERNA => $ejemplar
                     ->whereNull('estado_manual')
-                    ->whereHas('custodiasExternas', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva')),
+                    ->whereHas('custodiasExternas', fn ($q) => $q->whereNull('ejemplares_custodia_externa.fecha_retorno_efectiva')),
                 Ejemplar::ESTADO_DISPONIBLE => $ejemplar
                     ->whereNull('estado_manual')
                     ->whereDoesntHave('prestamosDomiciliarios', fn ($q) => $q->whereIn('estado', ['activo', 'atrasado']))
-                    ->whereDoesntHave('movimientosInternos', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva'))
-                    ->whereDoesntHave('custodiasExternas', fn ($q) => $q->wherePivotNull('fecha_retorno_efectiva')),
+                    ->whereDoesntHave('movimientosInternos', fn ($q) => $q->whereNull('ejemplares_movimiento_interno.fecha_retorno_efectiva'))
+                    ->whereDoesntHave('custodiasExternas', fn ($q) => $q->whereNull('ejemplares_custodia_externa.fecha_retorno_efectiva')),
                 // Valor no reconocido: no debe devolver falsos positivos.
                 default => $ejemplar->whereRaw('1 = 0'),
             };

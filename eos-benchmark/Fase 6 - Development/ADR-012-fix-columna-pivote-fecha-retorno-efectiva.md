@@ -1,6 +1,6 @@
 # ADR-012 — Corrección: nombre de columna incorrecto en las relaciones pivote de movimiento interno y custodia externa
 
-**Estado:** Código corregido — pendiente de verificación con evidencia objetiva (ver `ADR-002`, actualización 2026-07-14).
+**Estado:** Código corregido, con una segunda corrección relacionada (ver actualización) — pendiente de verificación con evidencia objetiva.
 **Fecha:** 2026-07-14
 **Detectado por:** Primera ejecución real de `php artisan test --filter=Catalogo` sobre el Módulo 2, ejecutada por la Comisión Directiva en su propio entorno (el mismo que validó el Módulo 1, `ADR-006`/`ADR-007`/`ADR-008`). Es exactamente el tipo de hallazgo que `ADR-002` anticipó como riesgo aceptado de entregar código sin ejecución previa en este sandbox.
 
@@ -61,3 +61,32 @@ Se descarta unificar el nombre de columna entre las tres tablas pivote (por ejem
 - El Módulo 1 tenía, desde su escritura, un defecto latente y no detectado en `Ejemplar::tieneMovimientoActivo()`/`estadoActual()` para 2 de los 4 tipos de movimiento — su suite de 38 tests (orientada a auth/roles/auditoría) nunca lo hubiera detectado porque no ejercita ese código. Se deja constancia de que "38/38 en verde" (`ADR-006`) certificaba lo que efectivamente cubría esa suite, no la ausencia total de defectos en el código del Módulo 1 — distinción ya implícita en el alcance de cada suite, pero que vale explicitar dado este hallazgo.
 - Se refuerza, con un caso concreto, el criterio ya aplicado en `ADR-008`: una suite en verde certifica lo que efectivamente cubre, y una brecha de cobertura puede ocultar un defecto de producción real durante mucho tiempo. Se recomienda, al iniciar cada módulo nuevo (3 en adelante), revisar explícitamente si los métodos de dominio reutilizados de módulos anteriores (como `Ejemplar::estadoActual()`/`tieneMovimientoActivo()`, que Módulo 4/5 van a usar intensivamente) ya tienen cobertura real más allá de los casos que el módulo que los originó necesitaba probar.
 - Sin cambios de esquema, sin cambios de comportamiento observable desde la UI salvo la corrección misma (los casos que antes fallaban con error 500 ahora deben funcionar).
+
+---
+
+## Actualización (2026-07-14) — Segunda ejecución real: un segundo defecto, distinto, en el mismo método
+
+Tras el push del fix anterior, la Comisión Directiva volvió a correr `php artisan test --filter=Catalogo`: `1 failed, 30 passed (85 assertions)`. Los 27 tests originales (con el que fallaba antes ahora en verde) y 3 de los 4 tests nuevos pasaron. Falló exactamente el test nuevo que ejercita `Libro::scopeConEstado()` con datos reales de movimiento interno (`BusquedaCatalogoTest::test_el_filtro_de_estado_disponible_excluye_libros_con_ejemplares_en_movimiento_interno`), con un error distinto:
+
+```
+SQLSTATE[42703]: Undefined column: 7 ERROR: column "pivot_null" does not exist
+LINE 1: ..."ejemplares_movimiento_interno"."ejemplar_id" and "pivot_null" = fecha_retorno_efectiva...
+```
+
+### Diagnóstico
+
+Este no es el mismo defecto que el de la sección anterior (el nombre de columna ya estaba corregido) — es un defecto distinto, más profundo, en la misma línea de código: `wherePivotNull()` **no es un método válido dentro de un closure de `whereHas()`**. Ese closure recibe un `Illuminate\Database\Eloquent\Builder` acotado al modelo relacionado (`MovimientoInterno`/`CustodiaExterna`), no la instancia de la relación `BelongsToMany` — y `wherePivotNull()` solo existe en `BelongsToMany`, no en el Builder genérico. Al no existir el método, Eloquent lo resuelve por su parser dinámico de "where\<Columna\>" (el mismo mecanismo que permite escribir `whereNombre('valor')` en vez de `where('nombre', 'valor')`), que interpreta `PivotNull` como el nombre de columna `pivot_null` y el argumento `'fecha_retorno_efectiva'` como el valor a comparar — de ahí el SQL literal `"pivot_null" = fecha_retorno_efectiva` que no tiene sentido y falla porque esa columna no existe.
+
+`wherePivotNull()` sí funciona correctamente cuando se llama directamente sobre la relación (`$this->movimientosInternos()->wherePivotNull(...)`, como hacen `Ejemplar::tieneMovimientoActivo()`/`estadoActual()`) — por eso los 3 tests nuevos de `EjemplarEstadoTest` (que ejercitan esos métodos directamente) pasaron correctamente en esta misma ejecución. El problema es específico a la combinación `whereHas(...) + wherePivotNull()` dentro del closure, que `Libro::scopeConEstado()` usa desde que se escribió en el Paso 5 — es decir, este es un tercer defecto preexistente desde el Paso 5, no introducido por la corrección anterior, simplemente nunca antes ejercitado por ningún test hasta el nuevo test de búsqueda por estado agregado en esta misma corrección.
+
+### Decisión
+
+Se corrige referenciando la columna de la tabla pivote de forma calificada (`'ejemplares_movimiento_interno.fecha_retorno_efectiva'` / `'ejemplares_custodia_externa.fecha_retorno_efectiva'`) con `whereNull()` en vez de `wherePivotNull()`. Es válido porque `whereHas()` sobre una relación `BelongsToMany` sí hace el `JOIN` con la tabla pivote para poder acotar la subconsulta — se confirma en el propio SQL del error, que ya incluye `inner join "ejemplares_movimiento_interno"` — solo que no expone un método de conveniencia para filtrar por sus columnas dentro del closure; hay que nombrarlas explícitamente. No se introduce ninguna dependencia ni abstracción nueva.
+
+### Verificación
+
+**Antes de esta segunda corrección:** `1 failed, 30 passed (85 assertions)` (evidencia real, entorno del usuario, 2026-07-14, segunda ejecución). **Después:** corregido en esta sesión, todavía no re-ejecutado contra el entorno real (misma limitación de `ADR-002`). Se esperan 31 tests en verde. El Módulo 2 permanece "código corregido, no cerrado" hasta obtener esa confirmación.
+
+### Consecuencias
+
+- Confirma, con un segundo caso en el mismo ADR, el patrón ya señalado: `Libro::scopeConEstado()` reproduce en SQL una lógica que en `Ejemplar` está en PHP, y esa traducción tiene su propia superficie de error independiente de que la lógica de negocio original sea correcta — no alcanza con que el método fuente (`estadoActual()`) esté bien para asumir que su traducción a SQL también lo está. Cualquier cambio futuro a `estadoActual()`/`tieneMovimientoActivo()` que introduzca patrones nuevos de pivote debe re-verificar explícitamente que su traducción en `scopeConEstado()` use APIs válidas en ese contexto (columnas calificadas, no métodos de conveniencia de relación), no solo que el nombre de columna coincida.

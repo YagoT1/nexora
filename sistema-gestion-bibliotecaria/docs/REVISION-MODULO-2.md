@@ -44,9 +44,13 @@ profundidad de Categoría en ambos sentidos) en 6 archivos bajo `tests/Feature/C
 defecto real y preexistente del Módulo 1 (nombre de columna incorrecto en las relaciones pivote de
 movimiento interno y custodia externa de `Ejemplar`), no introducido en este módulo — diagnóstico
 completo, corrección y 4 tests de regresión nuevos en
-`eos-benchmark/Fase 6 - Development/ADR-012-fix-columna-pivote-fecha-retorno-efectiva.md`. Con el
-fix aplicado se esperan 31 tests en verde (27 originales + 4 nuevos), pero **esa re-ejecución
-todavía no se realizó** — el módulo permanece "código corregido, no cerrado" hasta obtenerla.
+`eos-benchmark/Fase 6 - Development/ADR-012-fix-columna-pivote-fecha-retorno-efectiva.md`.
+
+**Segunda ejecución real (2026-07-14),** tras pushear ese fix: `1 failed, 30 passed (85
+assertions)`. Un segundo defecto, distinto, en el mismo método (`wherePivotNull()` no es válido
+dentro de un closure `whereHas()`) — corregido, ver la actualización del mismo ADR-012. **Esa
+re-ejecución todavía no se realizó** — el módulo permanece "código corregido, no cerrado" hasta
+obtener 31 tests en verde.
 
 ---
 

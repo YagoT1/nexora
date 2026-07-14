@@ -289,10 +289,14 @@ una `CustodiaExterna` vinculados a un Ejemplar verificando `tieneMovimientoActiv
 `estadoActual()`, y el filtro `estado=disponible` de búsqueda. Detalle completo del diagnóstico,
 la decisión y las alternativas descartadas en `ADR-012`.
 
-**No ejecutado todavía contra el entorno real** (mismo patrón que el resto del Módulo 2 y que el
-Módulo 1 antes de `ADR-006`): este sandbox no dispone de PHP/Composer/PostgreSQL (`ADR-002`). Con
-el fix aplicado se esperan 31 tests en verde (27 originales + 4 nuevos), pero esa confirmación
-todavía no se obtuvo — es la validación pendiente antes de dar por cerrado el Módulo 2.
+**Segunda ejecución real (2026-07-14), tras el push del fix anterior:** `1 failed, 30 passed (85
+assertions)`. Los 27 tests originales y 3 de los 4 nuevos pasaron; falló el nuevo test de búsqueda
+por estado, con un defecto distinto al anterior (mismo nombre de columna ya corregido, pero
+`wherePivotNull()` no es válido dentro de un closure `whereHas()` — cae en el parser dinámico de
+Eloquent y genera SQL inválido). Corregido usando `whereNull()` con la columna de la tabla pivote
+calificada explícitamente. Detalle completo en la actualización de `ADR-012`. Con este segundo fix
+se esperan 31 tests en verde; esa confirmación todavía no se obtuvo — es la validación pendiente
+antes de dar por cerrado el Módulo 2.
 
 ### Preparación para revisión funcional (2026-07-14)
 
@@ -322,4 +326,32 @@ la conclusión de la revisión objetiva anterior de que el tooling de entorno ya
 ## Decisión
 
 Módulo 1 queda **cerrado**: código, migraciones, seeders y suite de tests completa ejecutados con
-éxito contra PHP 8.5 y PostgreSQL 16 reales (`ADR-0
+éxito contra PHP 8.5 y PostgreSQL 16 reales (`ADR-006`/`ADR-007`/`ADR-008`), y con su historial
+consolidado en un único repositorio (`nexora`), publicado en GitHub (`ADR-009`/`ADR-010`). El único
+punto pendiente — el pre-checklist de infraestructura (punto 4) — es no bloqueante y no impide
+iniciar el Módulo 2.
+
+**Nota de gestión (2026-07-14):** ante la observación de que las últimas iteraciones se concentraron
+en instalación y validación de herramientas (MCP de Postgres, Desktop Commander MCP, incidente SSL),
+se hizo una evaluación objetiva: no existe ningún bloqueo real para el producto (Módulo 1 validado
+en verde; el pre-checklist de infraestructura no es requisito de Módulo 2), y las tareas de tooling
+pendientes (`ADR-011`, pasos 3-9 de 9) son mejoras de entorno de desarrollo, no requisitos del
+roadmap. Se decidió pausar ese tooling sin cerrarlo (queda documentado y retomable) y avanzar
+directamente con la implementación del Módulo 2 — Catálogo.
+
+**Módulo 2 — Catálogo (2026-07-14): código completo, Pasos 1 a 8, con dos ejecuciones reales y dos
+defectos corregidos.** Los 8 pasos del plan de implementación recomendado por
+`BRIEFING-MODULO-2-CATALOGO.md` están escritos: CRUD de Autor, Editorial, Categoría (con validación
+de profundidad máxima bidireccional), Libro y Ejemplar; búsqueda de catálogo; vista de detalle de
+Libro; validación RN-21; y la suite de tests Feature correspondiente. Se obtuvieron dos ejecuciones
+reales sucesivas (`php artisan test --filter=Catalogo`, entorno del usuario): la primera,
+`1 failed, 26 passed`, reveló un nombre de columna incorrecto en las relaciones pivote de movimiento
+interno/custodia externa (defecto preexistente del Módulo 1, corregido en `ADR-012`); la segunda,
+tras pushear ese fix, `1 failed, 30 passed`, reveló un segundo defecto distinto en el mismo método
+(`wherePivotNull()` inválido dentro de un closure `whereHas()`, preexistente desde el Paso 5,
+también corregido — ver actualización de `ADR-012`). **Esa segunda corrección todavía no se
+re-ejecutó** — hasta obtener esa confirmación en verde (31 tests esperados), el Módulo 2 se
+considera **código corregido, no cerrado**. Único punto diferido, no bloqueante: R-1 (historial de
+condición física por ejemplar), pendiente de una decisión de diseño (entidad versionada vs.
+sobrescritura de campo) que no corresponde tomar unilateralmente — ver
+`BRIEFING-MODULO-2-CATALOGO.md`, sección "Recomendación".
