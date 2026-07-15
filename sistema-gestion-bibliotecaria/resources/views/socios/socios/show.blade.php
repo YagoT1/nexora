@@ -56,6 +56,7 @@
                 <th class="px-4 py-2">Fecha de préstamo</th>
                 <th class="px-4 py-2">Vencimiento</th>
                 <th class="px-4 py-2">Estado</th>
+                <th class="px-4 py-2"></th>
             </tr>
         </thead>
         <tbody>
@@ -65,12 +66,26 @@
                     <td class="px-4 py-2">{{ $prestamo->fecha_prestamo->format('d/m/Y') }}</td>
                     <td class="px-4 py-2">{{ $prestamo->fecha_vencimiento->format('d/m/Y') }}</td>
                     <td class="px-4 py-2">{{ $prestamo->estado === 'atrasado' ? 'Atrasado' : 'Activo' }}</td>
+                    <td class="px-4 py-2 text-right">
+                        {{-- Origen: Módulo 5, Paso 5 (CU-1). RN-03 se valida en el controlador; si hay
+                             una reserva pendiente sobre el libro, el mensaje de error explica el motivo. --}}
+                        <form method="POST" action="{{ route('prestamos.renovar', $prestamo) }}">
+                            @csrf
+                            <button type="submit" class="text-blue-700">Renovar</button>
+                        </form>
+                    </td>
                 </tr>
             @empty
-                <tr><td class="px-4 py-4 text-gray-500" colspan="4">Sin préstamos activos.</td></tr>
+                <tr><td class="px-4 py-4 text-gray-500" colspan="5">Sin préstamos activos.</td></tr>
             @endforelse
         </tbody>
     </table>
+
+    @error('renovacion')
+        <div class="mb-6 -mt-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {{ $message }}
+        </div>
+    @enderror
 
     <h2 class="text-sm font-semibold text-gray-700 mb-3">Reservas activas</h2>
     <table class="w-full text-sm bg-white border border-gray-200 rounded mb-8">
@@ -79,6 +94,7 @@
                 <th class="px-4 py-2">Libro</th>
                 <th class="px-4 py-2">Fecha de reserva</th>
                 <th class="px-4 py-2">Estado</th>
+                <th class="px-4 py-2">Retirar antes de</th>
             </tr>
         </thead>
         <tbody>
@@ -87,9 +103,10 @@
                     <td class="px-4 py-2">{{ $reserva->libro->titulo }}</td>
                     <td class="px-4 py-2">{{ $reserva->fecha_reserva->format('d/m/Y') }}</td>
                     <td class="px-4 py-2">{{ $reserva->estado === 'personal_alertado' ? 'Personal alertado' : 'Pendiente' }}</td>
+                    <td class="px-4 py-2">{{ $reserva->fecha_limite_retiro?->format('d/m/Y H:i') ?? '—' }}</td>
                 </tr>
             @empty
-                <tr><td class="px-4 py-4 text-gray-500" colspan="3">Sin reservas activas.</td></tr>
+                <tr><td class="px-4 py-4 text-gray-500" colspan="4">Sin reservas activas.</td></tr>
             @endforelse
         </tbody>
     </table>

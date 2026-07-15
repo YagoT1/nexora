@@ -43,6 +43,49 @@ class Libro extends Model
     }
 
     /**
+     * RN-05 + Decisión D-13 (BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md, sección 7 y riesgo R-1).
+     * Asigna la reserva 'pendiente' más antigua de este Libro al ejemplar recién liberado, si
+     * corresponde. Centraliza en el modelo (no en un controlador) la lógica de RN-05 para que tanto
+     * Módulo 4 (devolución) como Módulo 7 (expiración de la ventana de retiro, que reprocesa la
+     * siguiente reserva de la cola con "la misma lógica de asignación del Módulo 5", texto literal
+     * del Plan de Implementación v2) puedan invocarla sin duplicarla.
+     *
+     * No verifica aquí `tieneMovimientoActivo()` del ejemplar: es responsabilidad del llamador
+     * garantizar que el ejemplar pasado esté realmente libre (la devolución ya lo deja así en la
+     * misma transacción; Módulo 7 deberá hacer la misma verificación antes de invocar este método).
+     *
+     * @return Reserva|null La reserva asignada, o null si no había ninguna 'pendiente'.
+     */
+    public function asignarSiguienteReserva(Ejemplar $ejemplar): ?Reserva
+    {
+        $reservaPendiente = $this->reservas()
+            ->where('estado', Reserva::ESTADO_PENDIENTE)
+            ->oldest('fecha_reserva')
+            ->first();
+
+        if (! $reservaPendiente) {
+            return null;
+        }
+
+        $ventanaHoras = (int) ParametroConfiguracion::obtener(ParametroConfiguracion::VENTANA_RETIRO_RESERVA_HORAS, 48);
+        $diasAtencion = array_map('trim', explode(',', (string) ParametroConfiguracion::obtener(
+            ParametroConfiguracion::DIAS_ATENCION_AL_PUBLICO,
+            'lunes,martes,miercoles,jueves,viernes'
+        )));
+
+        $fechaAlerta = now();
+
+        $reservaPendiente->update([
+            'estado' => Reserva::ESTADO_PERSONAL_ALERTADO,
+            'fecha_alerta_al_personal' => $fechaAlerta,
+            'fecha_limite_retiro' => Reserva::calcularFechaLimiteRetiro($fechaAlerta, $ventanaHoras, $diasAtencion),
+            'ejemplar_asignado_id' => $ejemplar->id,
+        ]);
+
+        return $reservaPendiente->fresh();
+    }
+
+    /**
      * Origen: Plan de Implementación v2, Módulo 2 — Catálogo, "Búsqueda de catálogo: ... estado".
      * Filtra libros con al menos un ejemplar en el estado operativo indicado (D-09: el estado no es
      * una columna, es derivado — ver Ejemplar::estadoActual()).

@@ -28,6 +28,12 @@ class DatabaseSeeder extends Seeder
      * de devolución y ver sus efectos (RN-18, RN-07, alerta de reserva) ocurrir en el momento de la
      * revisión — ver docs/REVISION-MODULO-4.md. Corre al final porque reutiliza los Tipos de Socio
      * ya sembrados y al usuario Administrador como registrador.
+     *
+     * Módulo 5 (Renovaciones y reservas): RenovacionesReservasDemoSeeder agrega un préstamo
+     * renovable sin reservas, uno bloqueado por una reserva pendiente ajena (RN-03), un libro
+     * reservable sin reservas todavía, y una reserva ya en 'personal_alertado' con su fecha límite
+     * de retiro ya calculada (RN-05/D-13) — ver docs/REVISION-MODULO-5.md. Corre al final, después
+     * de PrestamosDemoSeeder, por el mismo motivo (reutiliza Tipos de Socio y Administrador).
      */
     public function run(): void
     {
@@ -38,6 +44,7 @@ class DatabaseSeeder extends Seeder
             CatalogoDemoSeeder::class,
             SociosDemoSeeder::class,
             PrestamosDemoSeeder::class,
+            RenovacionesReservasDemoSeeder::class,
         ]);
     }
 }

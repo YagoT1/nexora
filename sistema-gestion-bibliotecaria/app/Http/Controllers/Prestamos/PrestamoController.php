@@ -2,6 +2,8 @@
 
 // Origen: Plan de Implementación v2, Módulo 4 — Préstamos y devoluciones. Ver
 // Fase 6 - Development/BRIEFING-MODULO-4-PRESTAMOS.md para el detalle de reglas, riesgos y plan.
+// Módulo 5 (renovación, reservas para retirar): ver
+// Fase 6 - Development/BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md.
 
 namespace App\Http\Controllers\Prestamos;
 
@@ -11,6 +13,7 @@ use App\Models\ExcepcionAutorizada;
 use App\Models\HistorialAtraso;
 use App\Models\ParametroConfiguracion;
 use App\Models\PrestamoDomiciliario;
+use App\Models\Renovacion;
 use App\Models\Reserva;
 use App\Models\RestriccionSocio;
 use App\Models\Socio;
@@ -169,6 +172,12 @@ class PrestamoController extends Controller
 
     /**
      * Origen: Paso 3 del briefing. RN-12: no se identifica quién trae el libro — solo el ejemplar.
+     *
+     * Módulo 5, Paso 5: esta pantalla es el punto de operación diaria más cercano a "el mostrador"
+     * que existe hoy en el sistema (no hay un panel de alertas dedicado todavía — eso es Módulo 8),
+     * así que acá se muestran también las reservas 'personal_alertado' con su fecha límite de
+     * retiro, satisfaciendo el criterio de aceptación "el panel muestra correctamente la fecha
+     * límite de retiro del ejemplar apartado" sin inventar una pantalla nueva fuera de alcance.
      */
     public function buscarDevolucion(Request $request)
     {
@@ -183,7 +192,12 @@ class PrestamoController extends Controller
                 ->get();
         }
 
-        return view('prestamos.devolucion-buscar', compact('busqueda', 'prestamosActivos'));
+        $reservasParaRetirar = Reserva::where('estado', Reserva::ESTADO_PERSONAL_ALERTADO)
+            ->with(['libro', 'socio'])
+            ->orderBy('fecha_limite_retiro')
+            ->get();
+
+        return view('prestamos.devolucion-buscar', compact('busqueda', 'prestamosActivos', 'reservasParaRetirar'));
     }
 
     public function confirmarDevolucion(PrestamoDomiciliario $prestamo)
@@ -259,31 +273,68 @@ class PrestamoController extends Controller
             }
 
             // Criterio de aceptación explícito: "la devolución de un libro con reserva pendiente
-            // activa la alerta de 'avisar al socio' ... dentro del ciclo de la misma request." Se
-            // marca la reserva más antigua en estado pendiente; la gestión completa de la cola
-            // (retiro, vencimiento de la ventana, cancelación) es Módulo 5.
-            $reservaPendiente = Reserva::where('libro_id', $prestamo->ejemplar->libro_id)
-                ->where('estado', 'pendiente')
-                ->oldest('fecha_reserva')
-                ->first();
+            // activa la alerta de 'avisar al socio' ... dentro del ciclo de la misma request."
+            // Origen: Módulo 5, Paso 2 (refactor de R-1 del briefing de Módulo 5) — la asignación de
+            // la reserva más antigua y el cálculo de la ventana de retiro (RN-05, Decisión D-13) se
+            // centralizan en Libro::asignarSiguienteReserva(), reutilizable también por Módulo 7.
+            $reservaAsignada = $prestamo->ejemplar->libro->asignarSiguienteReserva($prestamo->ejemplar);
 
-            if ($reservaPendiente) {
-                $ventanaHoras = (int) ParametroConfiguracion::obtener(ParametroConfiguracion::VENTANA_RETIRO_RESERVA_HORAS, 48);
-
-                $reservaPendiente->update([
-                    'estado' => 'personal_alertado',
-                    'fecha_alerta_al_personal' => now(),
-                    'fecha_limite_retiro' => now()->addHours($ventanaHoras),
-                    'ejemplar_asignado_id' => $prestamo->ejemplar_id,
-                ]);
-
-                $mensajesAlerta[] = "Hay una reserva pendiente de {$reservaPendiente->socio->nombre_principal} para este libro — avisarle que ya está disponible.";
+            if ($reservaAsignada) {
+                $mensajesAlerta[] = "Hay una reserva pendiente de {$reservaAsignada->socio->nombre_principal} para este libro — avisarle que ya está disponible.";
             }
         });
 
         return redirect()->route('prestamos.devolucion.buscar')
             ->with('status', 'Devolución registrada correctamente.')
             ->with('alertas', $mensajesAlerta);
+    }
+
+    /**
+     * Origen: BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md, CU-1. RN-03 (bloqueo si hay reservas
+     * pendientes o ya alertadas al personal sobre el mismo título) y RN-19 (la nueva fecha de
+     * vencimiento se calcula desde la fecha de renovación, no se extiende la anterior; se preserva
+     * la fecha anterior en el registro de Renovación; el préstamo permanece en su mismo estado). Sin
+     * límite de renovaciones consecutivas — la única condición es la ausencia de demanda en espera.
+     */
+    public function renovar(PrestamoDomiciliario $prestamo)
+    {
+        abort_unless(in_array($prestamo->estado, PrestamoDomiciliario::ESTADOS_ABIERTOS, true), 404);
+
+        $libro = $prestamo->ejemplar->libro;
+
+        // RN-03: bloquea tanto una reserva 'pendiente' como una ya 'personal_alertado' — ambas son
+        // demanda en espera sobre el mismo título, no solo la cola sin asignar todavía.
+        $reservaBloqueante = $libro->reservas()
+            ->whereIn('estado', Reserva::ESTADOS_ACTIVOS)
+            ->oldest('fecha_reserva')
+            ->first();
+
+        if ($reservaBloqueante) {
+            return back()->withErrors([
+                'renovacion' => "El libro tiene una reserva pendiente de {$reservaBloqueante->socio->nombre_principal}.",
+            ]);
+        }
+
+        $plazoDias = (int) ParametroConfiguracion::obtener(ParametroConfiguracion::PLAZO_PRESTAMO_DIAS, 15);
+        $fechaRenovacion = now();
+        $fechaVencimientoAnterior = $prestamo->fecha_vencimiento;
+        $nuevaFechaVencimiento = $fechaRenovacion->copy()->addDays($plazoDias);
+
+        DB::transaction(function () use ($prestamo, $fechaRenovacion, $fechaVencimientoAnterior, $nuevaFechaVencimiento) {
+            Renovacion::create([
+                'prestamo_domiciliario_id' => $prestamo->id,
+                'fecha_renovacion' => $fechaRenovacion,
+                'fecha_vencimiento_anterior' => $fechaVencimientoAnterior->toDateString(),
+                'nueva_fecha_vencimiento' => $nuevaFechaVencimiento->toDateString(),
+                'registrado_por' => auth()->id(),
+            ]);
+
+            // RN-19: el estado del préstamo permanece igual (activo/atrasado) — la renovación no lo
+            // toca; solo se actualiza fecha_vencimiento.
+            $prestamo->update(['fecha_vencimiento' => $nuevaFechaVencimiento->toDateString()]);
+        });
+
+        return back()->with('status', "Préstamo renovado correctamente. Nuevo vencimiento: {$nuevaFechaVencimiento->format('d/m/Y')}.");
     }
 
     private function tieneExcepcionVigente(Socio $socio, string $tipo): bool

@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) completo y validado con evidencia real — `21 passed (59 assertions)` en la primera ejecución, sin defectos encontrados. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: determinar y ejecutar el Módulo 5 (Renovaciones y reservas) conforme a DA-08.
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) completo y validado con evidencia real — `21 passed (59 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 5 (de 10) — Renovaciones y reservas (renovación con bloqueo por reserva RN-03/RN-19, alta de reserva, asignación automática con cálculo de ventana de retiro RN-05/D-13, panel de alertas) **código completo, no cerrado**: no se ha obtenido todavía evidencia real de ejecución (`ADR-002`) — 14 tests nuevos escritos y verificados estructuralmente, pendientes de correr contra PHP/PostgreSQL reales. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: obtener evidencia real de ejecución del Módulo 5 y, según el resultado, cerrarlo o corregir.
 
 ---
 
@@ -482,6 +482,92 @@ decía 19; el resultado real y el conteo directo de los tres archivos de test co
 `AccesoPrestamosTest`, 10 en `RegistroPrestamoTest`, 7 en `DevolucionTest`). Corregido en ambos
 documentos.
 
+### Módulo 5 — Renovaciones y reservas: implementación completa (2026-07-15)
+
+Con el Módulo 4 formalmente cerrado con evidencia objetiva (tras corregir el error de conteo de
+tests), la Comisión Directiva confirmó el `git push origin main` y otorgó nuevamente autonomía para
+actuar según el estado real del proyecto. Se revisó DA-08 (Renovaciones y reservas es el módulo #5,
+con precondición explícita "Módulo 4 completo" — ya cerrado), el Plan de Implementación v2 (RN-03,
+RN-05, RN-19, RN-20, RN-21) y el estado real del código (todas las entidades involucradas —
+`Reserva`, `Renovacion`, `PrestamoDomiciliario`, `Libro`, `Ejemplar`, `ParametroConfiguracion` — ya
+existían completas desde el Módulo 1), concluyendo que correspondía iniciar Módulo 5 tal como
+estaba programado. Se redactó `BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md` como paso previo
+obligatorio, identificando y resolviendo dentro del propio briefing una decisión de diseño no
+cubierta explícitamente por el dominio (**Decisión D-13**: el proyecto no tiene ningún parámetro de
+horario de apertura/cierre, solo días de atención — se decidió tratar cada día de atención como un
+bloque continuo de 24 horas hacia la ventana de retiro de 48 horas de RN-05, saltando por completo
+los días que no son de atención, sin inventar un requisito de horario no solicitado) y tres riesgos
+técnicos (R-1: la lógica de asignación de reserva, antes parcial e inline en el Módulo 4, se
+centraliza para reutilizarla desde el futuro Módulo 7; R-2: ninguna tarea programada vence
+automáticamente una reserva vencida, eso es Módulo 7; R-3: los estados `retirada`/`cancelada` de
+Reserva quedan sin pantalla dedicada, no exigido por los criterios de este módulo).
+
+Entregado, en 6 pasos (más un Paso 7 documental cerrando el módulo, aquí):
+
+- **Paso 1 (constantes de estado + algoritmo de ventana) — código escrito:** `Reserva` agrega las 5
+  constantes de estado (`ESTADO_PENDIENTE`, `ESTADO_PERSONAL_ALERTADO`, `ESTADO_RETIRADA`,
+  `ESTADO_VENCIDA_POR_NO_RETIRO`, `ESTADO_CANCELADA`, ya documentadas como comentario desde la
+  migración del Módulo 1, ahora formalizadas como código) y el método estático puro
+  `calcularFechaLimiteRetiro()`, que implementa la Decisión D-13: avanza un cursor de tiempo día por
+  día, consumiendo horas de la ventana solo en los días de atención configurados y saltando
+  completos los que no lo son, sin resetear la hora del día al saltar (preserva la hora de la
+  alerta).
+- **Paso 2 (centralización de la asignación de reservas) — código escrito:**
+  `Libro::asignarSiguienteReserva(Ejemplar $ejemplar)` (nuevo): busca la reserva `pendiente` más
+  antigua del libro, la pasa a `personal_alertado`, calcula su `fecha_limite_retiro` con el método
+  del Paso 1 y los parámetros ya sembrados (`VENTANA_RETIRO_RESERVA_HORAS`,
+  `DIAS_ATENCION_AL_PUBLICO`), y registra el ejemplar asignado. `PrestamoController::devolver()`
+  (Módulo 4) se refactorizó para usar este método en vez de su lógica inline anterior — verificado
+  que el comportamiento observable no cambia (mismo test de regresión de Módulo 4 sigue
+  ejerciéndolo).
+- **Paso 3 (renovación de préstamo) — código escrito:** `PrestamoController::renovar()` (nuevo):
+  aplica RN-03 (bloquea si el libro tiene una reserva en cualquiera de los dos estados activos,
+  `pendiente` o `personal_alertado`, rechazando con el nombre del socio que la generó) y RN-19 (la
+  fecha de vencimiento se recalcula desde la fecha de renovación, no se extiende desde la anterior;
+  se crea un registro de `Renovacion` con la fecha de vencimiento anterior preservada; el préstamo
+  no cambia de estado). Sin límite de renovaciones consecutivas — la única condición es la ausencia
+  de reservas activas, tal como exige el criterio de aceptación.
+- **Paso 4 (alta de reserva) — código escrito:** `ReservaController` (nuevo, namespace
+  `App\Http\Controllers\Prestamos`), rutas anidadas bajo Libro (`catalogo.libros.reservas.*`, solo
+  `create`/`store` — la reserva es sobre el título, no sobre un ejemplar puntual). Valida que el
+  socio no tenga ya una reserva activa (`pendiente` o `personal_alertado`) para el mismo libro antes
+  de crear la nueva.
+- **Paso 5 (puntos de entrada en la UI existente) — código escrito:** enlace "Reservar" en
+  `catalogo.libros.show`; botón "Renovar" (con manejo del mensaje de rechazo) y columna "Retirar
+  antes de" en `socios.socios.show` (vista de mostrador); nueva sección "Reservas para retirar" en
+  la pantalla de devolución (`prestamos.devolucion.buscar`), que hace de panel del mostrador exigido
+  por el criterio de aceptación 6 — sin crear ninguna pantalla nueva de "panel de alertas" propia,
+  reutilizando las dos vistas ya existentes donde el personal ya opera.
+- **Refactor RN-21 (heredada del Módulo 2):** `EjemplarController::dejaReservasSinSatisfacer()`
+  reemplaza el literal `'pendiente'` por la constante `Reserva::ESTADO_PENDIENTE` del Paso 1 — sin
+  cambio de comportamiento, solo elimina el string mágico que quedaba pendiente desde que esa
+  constante no existía todavía.
+- **Paso 6 (tests Feature y unitarios) — código escrito:** `tests/Unit/
+  ReservaCalcularFechaLimiteRetiroTest.php` (4 tests unitarios puros, sin base de datos, sobre el
+  algoritmo del Paso 1: margen en el mismo día, cruce completo de fin de semana, último día hábil de
+  la semana, y alerta producida en un día no hábil); `tests/Feature/Prestamos/RenovacionTest.php` (4
+  tests: rechazo con reserva `pendiente`, rechazo también con `personal_alertado`, éxito sin
+  reservas con verificación de RN-19, ausencia de límite de renovaciones); `tests/Feature/Prestamos/
+  ReservaTest.php` (4 tests: alta exitosa, rechazo de una segunda reserva activa del mismo socio y
+  libro, una reserva ya resuelta no cuenta como activa, y verificación de integración de que la
+  asignación automática del Paso 2 se refleja en el panel de devolución con su fecha límite); y 2
+  tests nuevos en `tests/Feature/Prestamos/AccesoPrestamosTest.php` (control de acceso por rol sobre
+  la nueva ruta de alta de reserva, mismo patrón que el resto del archivo) — 14 tests nuevos en
+  total.
+- **Preparación para revisión funcional:** `RenovacionesReservasDemoSeeder` (nuevo, registrado en
+  `DatabaseSeeder` al final, después de `PrestamosDemoSeeder`) y `docs/REVISION-MODULO-5.md`
+  (nuevo). El seeder cubre un préstamo renovable sin reservas, uno bloqueado por una reserva
+  pendiente ajena, un libro reservable todavía sin reservas, y una reserva ya en
+  `personal_alertado` con su fecha límite ya calculada — el criterio de asignación automática "en
+  vivo" (RN-05 disparándose durante la propia revisión) se ejercita reutilizando el caso ya sembrado
+  por `PrestamosDemoSeeder` (Módulo 4), sin duplicar datos.
+
+**Sin ejecutar todavía (ver `ADR-002`):** a diferencia de los Módulos 2, 3 y 4, este módulo no tiene
+todavía ninguna ejecución real contra PHP/PostgreSQL — los 14 tests nuevos fueron verificados
+únicamente por revisión estática y por reconstrucción manual tras varios episodios de corrupción de
+archivo durante la escritura (mismo patrón de entorno ya documentado, sin relación con la corrección
+de código). El módulo permanece **código completo, no cerrado** hasta obtener esa evidencia.
+
 ## Decisión
 
 Módulo 1 queda **cerrado**: código, migraciones, seeders y suite de tests completa ejecutados con
@@ -529,4 +615,28 @@ como no bloqueantes dentro del propio briefing.
 implementación recomendado por `BRIEFING-MODULO-4-PRESTAMOS.md` están completos: registro de
 préstamo (RN-01, RN-02, RN-04, RN-06, RN-08/RN-09, RN-13), devolución (RN-12, RN-18, RN-07, alerta
 de reserva pendiente), puntos de entrada desde Catálogo y Socios, y la suite de tests Feature
-correspondiente 
+correspondiente (21 tests en 3 archivos), más seeder de demostración y guía de revisión funcional
+(`docs/REVISION-MODULO-4.md`). Primera ejecución real (`php artisan db:seed
+--class=PrestamosDemoSeeder` + `php artisan test --filter=Prestamos`, mismo entorno que validó los
+Módulos 1, 2 y 3): **`21 passed (59 assertions)`, sin fallos** — igual que el Módulo 3, no se
+encontró ningún defecto de código en esta primera corrida. Ningún riesgo identificado en el
+briefing (R-1, R-2, R-3) quedó pendiente de decisión de producto o dominio: los tres son de
+naturaleza técnica y de alcance, resueltos o documentados como no bloqueantes dentro del propio
+briefing. Único hallazgo de esta revisión: un error de conteo de tests en la documentación (19 en
+vez de 21), sin impacto en el código, corregido en este documento y en
+`docs/REVISION-MODULO-4.md`.
+
+**Módulo 5 — Renovaciones y reservas: código completo, no cerrado (2026-07-15).** Los 6 pasos del
+plan de implementación recomendado por `BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md` están
+completos: renovación de préstamo con bloqueo por reserva activa (RN-03) y actualización de
+vencimiento (RN-19), alta de reserva con validación de duplicados, asignación automática de la
+reserva más antigua al devolver un ejemplar con cálculo de la ventana de retiro de atención al
+público (RN-05, Decisión D-13), refactor de RN-21 a la constante de estado, puntos de entrada en la
+UI existente, y 14 tests nuevos (unitarios y Feature), más seeder de demostración y guía de revisión
+funcional (`docs/REVISION-MODULO-5.md`). A diferencia de los Módulos 2, 3 y 4, **todavía no se
+obtuvo ninguna ejecución real** de esta suite contra PHP/PostgreSQL (`ADR-002`): el módulo no se
+declara cerrado hasta que la Comisión Directiva corra `php artisan db:seed
+--class=RenovacionesReservasDemoSeeder` y `php artisan test --filter=Renovacion --filter=Reserva`
+(o los filtros equivalentes) y confirme el resultado. Ningún riesgo identificado en el briefing
+(D-13, R-1, R-2, R-3) quedó pendiente de decisión de producto o dominio: todos se resolvieron o se
+documentaron como no bloqueantes dentro del propio briefing.

@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalogo\EjemplarRequest;
 use App\Models\Ejemplar;
 use App\Models\Libro;
+use App\Models\Reserva;
 
 class EjemplarController extends Controller
 {
@@ -86,10 +87,14 @@ class EjemplarController extends Controller
      * incluye 'personal_alertado' u otros estados — la regla habla puntualmente de pendientes) Y
      * ninguno de sus ejemplares puede salir de la biblioteca (Ejemplar::puedeSalirDeLaBiblioteca(),
      * RN-08/RN-09) para satisfacerlas.
+     *
+     * Origen: Módulo 2, Paso 7. Refactor de Módulo 5, Paso 1: el literal 'pendiente' se reemplaza
+     * por Reserva::ESTADO_PENDIENTE (constante introducida en Módulo 5) — sin cambio de
+     * comportamiento, mismo criterio de consistencia que otros refactors DRY del proyecto.
      */
     private function dejaReservasSinSatisfacer(Libro $libro): bool
     {
-        if (! $libro->reservas()->where('estado', 'pendiente')->exists()) {
+        if (! $libro->reservas()->where('estado', Reserva::ESTADO_PENDIENTE)->exists()) {
             return false;
         }
 

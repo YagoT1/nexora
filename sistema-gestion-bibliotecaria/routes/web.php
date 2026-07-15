@@ -7,6 +7,7 @@ use App\Http\Controllers\Catalogo\EditorialController;
 use App\Http\Controllers\Catalogo\EjemplarController;
 use App\Http\Controllers\Catalogo\LibroController;
 use App\Http\Controllers\Prestamos\PrestamoController;
+use App\Http\Controllers\Prestamos\ReservaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Socios\SocioController;
 use App\Http\Controllers\Socios\TipoSocioController;
@@ -69,6 +70,13 @@ Route::middleware(['auth', 'role:administrador,personal'])
             'except' => ['index', 'show'],
             'parameters' => ['libros' => 'libro', 'ejemplares' => 'ejemplar'],
         ]);
+        // Módulo 5 (Reservas) — ver BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md, Paso 4. Nace desde
+        // la vista de detalle de Libro (Módulo 2), aunque el controlador vive en el namespace
+        // Prestamos junto con PrestamoController (mismo dominio de circulación).
+        Route::resource('libros.reservas', ReservaController::class, [
+            'only' => ['create', 'store'],
+            'parameters' => ['libros' => 'libro', 'reservas' => 'reserva'],
+        ]);
     });
 // --- fin Módulo 2 (paso 1: Autor, Editorial; paso 2: Categoría; paso 3: Libro; paso 4: Ejemplar;
 // paso 5: búsqueda vía query string en 'libros.index'; paso 6: 'libros.show') ---
@@ -101,5 +109,11 @@ Route::middleware(['auth', 'role:administrador,personal'])
         Route::get('devolucion', [PrestamoController::class, 'buscarDevolucion'])->name('devolucion.buscar');
         Route::get('{prestamo}/devolucion', [PrestamoController::class, 'confirmarDevolucion'])->name('devolucion.confirmar');
         Route::post('{prestamo}/devolucion', [PrestamoController::class, 'devolver'])->name('devolucion.store');
+        // --- Módulo 5 (Renovaciones) — ver
+        // Fase 6 - Development/BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md, Paso 3. Vive en el mismo
+        // grupo de rutas 'prestamos.*' porque opera sobre PrestamoDomiciliario, mismo controlador.
+        Route::post('{prestamo}/renovar', [PrestamoController::class, 'renovar'])->name('renovar');
     });
 // --- fin Módulo 4 (paso 2: registro de préstamo; paso 3: devolución) ---
+// --- Módulo 5 (paso 3: renovación, dentro del grupo 'prestamos.*'; paso 4: reservas, dentro del
+// grupo 'catalogo.*' de arriba) ---

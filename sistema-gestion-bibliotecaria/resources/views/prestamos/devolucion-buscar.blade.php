@@ -15,6 +15,33 @@
         @endforeach
     @endif
 
+    {{-- Módulo 5, Paso 5 (RN-05): reservas ya alertadas al personal, con su fecha límite de retiro.
+         Ver PrestamoController::buscarDevolucion() sobre por qué esta pantalla hace de "panel del
+         mostrador" hasta que exista el Módulo 8. --}}
+    @if ($reservasParaRetirar->isNotEmpty())
+        <div class="bg-white border border-gray-200 rounded p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-700 mb-3">Reservas para retirar</h2>
+            <table class="w-full text-sm border border-gray-200 rounded">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="px-4 py-2">Libro</th>
+                        <th class="px-4 py-2">Socio</th>
+                        <th class="px-4 py-2">Retirar antes de</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($reservasParaRetirar as $reserva)
+                        <tr class="border-t border-gray-100">
+                            <td class="px-4 py-2">{{ $reserva->libro->titulo }}</td>
+                            <td class="px-4 py-2">{{ $reserva->socio->nombre_principal }}</td>
+                            <td class="px-4 py-2">{{ $reserva->fecha_limite_retiro->format('d/m/Y H:i') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
     <div class="bg-white border border-gray-200 rounded p-6">
         <form method="GET" action="{{ route('prestamos.devolucion.buscar') }}" class="flex gap-2 mb-4">
             <input type="text" name="busqueda" value="{{ $busqueda }}" placeholder="Título del libro…" class="flex-1 border-gray-300 rounded">

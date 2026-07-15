@@ -9,6 +9,9 @@
         <h1 class="text-xl font-semibold">{{ $libro->titulo }}</h1>
         <div class="space-x-3 text-sm">
             <a href="{{ route('catalogo.libros.index') }}" class="text-gray-600">← Volver al listado</a>
+            {{-- Origen: Módulo 5 — Renovaciones y reservas, Paso 5. La reserva se crea sobre el
+                 Libro (título), no sobre un ejemplar puntual — ver Paso 4 del briefing. --}}
+            <a href="{{ route('catalogo.libros.reservas.create', $libro) }}" class="text-green-700">Reservar</a>
             <a href="{{ route('catalogo.libros.edit', $libro) }}" class="text-blue-700">Editar libro</a>
         </div>
     </div>
