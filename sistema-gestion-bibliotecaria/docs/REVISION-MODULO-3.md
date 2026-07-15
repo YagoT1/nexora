@@ -5,10 +5,11 @@ Socio, búsqueda tolerante a variaciones de nombre, vista de mostrador, historia
 reemplaza `docs/BOOTSTRAP.md`: asume el mismo entorno usado para cerrar los Módulos 1 y 2 (`31
 passed (87 assertions)`, ver `docs/REVISION-MODULO-2.md`).
 
-**Estado de este módulo: código completo, no ejecutado.** A diferencia de los Módulos 1 y 2, este
-documento se entrega antes de la primera corrida real contra PHP/PostgreSQL (esta sesión de Cowork
-no puede ejecutar PHP — ver `ADR-002`). No debe considerarse cerrado hasta obtener esa evidencia,
-siguiendo el mismo estándar aplicado a los módulos anteriores.
+**Estado de este módulo: cerrado, con evidencia objetiva (2026-07-14).** Primera ejecución real
+contra PHP/PostgreSQL: `php artisan migrate` aplicó sin errores la extensión `unaccent`, y `php
+artisan test --filter=Socios` dio **`11 passed (25 assertions)`, sin fallos** — verde en el primer
+intento, sin necesidad de ninguna corrección (a diferencia del Módulo 2, que requirió dos fixes
+tras su primera corrida).
 
 ---
 
@@ -40,8 +41,10 @@ php artisan test --filter=Socios
 
 Cubre los 4 criterios de aceptación del módulo en 4 archivos bajo `tests/Feature/Socios/`
 (`AccesoSociosTest`, `TipoSocioTest`, `SocioTest`, `VistaMostradorSocioTest`) — 11 tests en total.
-**Todavía sin ejecutar contra un entorno real** — esta es la primera vez que se reporta este
-comando para el módulo; el resultado (verde o no) es la evidencia que falta para cerrarlo.
+
+**Primera ejecución real (2026-07-14): `11 passed (25 assertions)`, sin fallos.** Con esta
+evidencia, el Módulo 3 — Socios queda **cerrado**, con el mismo estándar de validación que los
+Módulos 1 y 2 (`ADR-006`, `ADR-012`).
 
 ---
 

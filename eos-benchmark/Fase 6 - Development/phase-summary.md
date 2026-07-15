@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **código completo, no cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) implementado conforme a `BRIEFING-MODULO-3-SOCIOS.md`, con seeder de demostración y suite de tests Feature (`tests/Feature/Socios/`, 11 tests) — todavía sin la primera ejecución real contra PHP/PostgreSQL (mismo estándar de evidencia que rigió los Módulos 1 y 2 antes de su primera corrida). Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: obtener evidencia real de `php artisan test --filter=Socios` para poder declarar cerrado el Módulo 3.
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: definir el alcance del Módulo 4 (Préstamos y devoluciones) conforme al orden de dependencias de DA-08.
 
 ---
 
@@ -392,10 +392,11 @@ Entregado, en 7 pasos:
   criterio que la preparación equivalente del Módulo 2: datos elegidos para ejercitar exactamente
   los 4 criterios de aceptación, y una tabla que cruza cada uno contra cómo revisarlo manualmente.
 
-**No ejecutado en ningún entorno real todavía** (mismo motivo que todos los módulos anteriores en
-su primera entrega — `ADR-002`): este sandbox no dispone de PHP, Composer ni PostgreSQL. El primer
-checkpoint de calidad real es correr `php artisan migrate` (nueva extensión `unaccent`) y `php
-artisan test --filter=Socios` en el entorno de la Comisión Directiva.
+**Primera ejecución real (2026-07-14):** la Comisión Directiva corrió `php artisan migrate`
+(extensión `unaccent` habilitada sin errores) y `php artisan test --filter=Socios` en su entorno
+(el mismo que validó los Módulos 1 y 2) → **`11 passed (25 assertions)`, sin fallos.** A diferencia
+del Módulo 2, no se encontró ningún defecto en esta primera corrida — los 7 pasos quedan validados
+sin necesidad de corrección.
 
 ## Decisión
 
@@ -429,14 +430,13 @@ diferido, no bloqueante: R-1 (historial de condición física por ejemplar), pen
 decisión de diseño (entidad versionada vs. sobrescritura de campo) que no corresponde tomar
 unilateralmente — ver `BRIEFING-MODULO-2-CATALOGO.md`, sección "Recomendación".
 
-**Módulo 3 — Socios: código completo, no cerrado (2026-07-14).** Los 7 pasos del plan de
-implementación recomendado por `BRIEFING-MODULO-3-SOCIOS.md` están completos: CRUD de Tipo de
-Socio y Socio, búsqueda tolerante a acentos (extensión `unaccent`), vista de mostrador con
-préstamos/reservas/restricción/atrasos, historial paginado, y la suite de tests Feature
-correspondiente (11 tests en 4 archivos), más seeder de demostración y guía de revisión funcional
-(`docs/REVISION-MODULO-3.md`). A diferencia del Módulo 2, este código todavía no tiene ninguna
-ejecución real: no puede declararse cerrado hasta correr `php artisan migrate` y `php artisan test
---filter=Socios` en un entorno con PHP/PostgreSQL reales y obtener esa evidencia, exactamente el
-mismo estándar que se exigió — y se cumplió, tras dos correcciones — para el Módulo 2. Ningún
-riesgo identificado en el briefing (R-1, R-2, R-3) quedó pendiente de decisión: los tres se
-resolvieron o se documentaron como no bloqueantes dentro del propio briefing.
+**Módulo 3 — Socios: cerrado (2026-07-14).** Los 7 pasos del plan de implementación recomendado por
+`BRIEFING-MODULO-3-SOCIOS.md` están completos: CRUD de Tipo de Socio y Socio, búsqueda tolerante a
+acentos (extensión `unaccent`), vista de mostrador con préstamos/reservas/restricción/atrasos,
+historial paginado, y la suite de tests Feature correspondiente, más seeder de demostración y guía
+de revisión funcional (`docs/REVISION-MODULO-3.md`). Primera ejecución real (`php artisan migrate`
++ `php artisan test --filter=Socios`, mismo entorno que validó los Módulos 1 y 2): **`11 passed (25
+assertions)`, sin fallos** — a diferencia del Módulo 2, no se encontró ningún defecto en esta
+primera corrida, cerrando el módulo sin necesidad de corrección. Ningún riesgo identificado en el
+briefing (R-1, R-2, R-3) quedó pendiente de decisión: los tres se resolvieron o se documentaron
+como no bloqueantes dentro del propio briefing.
