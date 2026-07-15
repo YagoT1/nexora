@@ -15,6 +15,10 @@
             </p>
         </div>
         <div class="space-x-3">
+            {{-- Origen: Módulo 4 — Préstamos, Paso 4. Punto de entrada natural al registro de un
+                 préstamo: el personal ya está viendo el estado del socio (restricción, límite)
+                 antes de decidir continuar. --}}
+            <a href="{{ route('prestamos.create', ['socio_id' => $socio->id]) }}" class="text-sm text-green-700">Registrar préstamo</a>
             <a href="{{ route('socios.socios.edit', $socio) }}" class="text-sm text-blue-700">Editar</a>
             <a href="{{ route('socios.socios.index') }}" class="text-sm text-gray-500">Volver al listado</a>
         </div>

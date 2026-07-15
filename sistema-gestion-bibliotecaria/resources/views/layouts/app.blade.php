@@ -26,6 +26,8 @@
                     @if (auth()->user()->esAdministrador() || auth()->user()->esPersonal())
                         <a href="{{ route('catalogo.libros.index') }}" class="text-sm">Catálogo</a>
                         <a href="{{ route('socios.socios.index') }}" class="text-sm">Socios</a>
+                        <a href="{{ route('prestamos.create') }}" class="text-sm">Nuevo préstamo</a>
+                        <a href="{{ route('prestamos.devolucion.buscar') }}" class="text-sm">Devolución</a>
                     @endif
                     @if (auth()->user()->esAdministrador())
                         <a href="{{ route('admin.users.index') }}" class="text-sm">Administración</a>
@@ -44,6 +46,8 @@
                 @if (auth()->user()->esAdministrador() || auth()->user()->esPersonal())
                     <a href="{{ route('catalogo.libros.index') }}" class="block py-2 text-sm">Catálogo</a>
                     <a href="{{ route('socios.socios.index') }}" class="block py-2 text-sm">Socios</a>
+                    <a href="{{ route('prestamos.create') }}" class="block py-2 text-sm">Nuevo préstamo</a>
+                    <a href="{{ route('prestamos.devolucion.buscar') }}" class="block py-2 text-sm">Devolución</a>
                 @endif
                 @if (auth()->user()->esAdministrador())
                     <a href="{{ route('admin.users.index') }}" class="block py-2 text-sm">Administración</a>

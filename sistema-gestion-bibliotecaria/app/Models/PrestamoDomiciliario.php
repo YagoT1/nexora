@@ -2,8 +2,9 @@
 
 // Origen: Modelo de Dominio v2, 3.1 "Préstamo domiciliario". RN-01, RN-02, RN-04, RN-12, RN-13, RN-18, RN-19.
 // La lógica de negocio completa (verificación de límite, restricciones, generación de restricción
-// automática al devolver con atraso) se implementa en el Módulo 4 — Préstamos y devoluciones.
-// Este modelo solo define estructura y relaciones (alcance del Módulo 1).
+// automática al devolver con atraso) se implementa en el Módulo 4 — Préstamos y devoluciones
+// (BRIEFING-MODULO-4-PRESTAMOS.md). Este modelo define estructura, relaciones y las constantes de
+// estado que consume esa lógica.
 
 namespace App\Models;
 
@@ -11,6 +12,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class PrestamoDomiciliario extends Model
 {
+    // Origen: Módulo 4, Paso 1. 'Atrasado' no lo marca ningún proceso automático todavía (esa tarea
+    // programada es Módulo 7, ver BRIEFING-MODULO-4-PRESTAMOS.md, riesgo R-1) — el atraso real se
+    // calcula por fecha en el momento de la devolución, no dependiendo de este campo. 'Activo' y
+    // 'Atrasado' se tratan como equivalentes ("préstamo abierto") en toda consulta de este módulo.
+    public const ESTADO_ACTIVO = 'activo';
+
+    public const ESTADO_ATRASADO = 'atrasado';
+
+    public const ESTADO_DEVUELTO = 'devuelto';
+
+    public const ESTADOS_ABIERTOS = [self::ESTADO_ACTIVO, self::ESTADO_ATRASADO];
+
     protected $table = 'prestamos_domiciliarios';
 
     protected $fillable = [

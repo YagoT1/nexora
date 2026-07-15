@@ -22,6 +22,12 @@ class DatabaseSeeder extends Seeder
      * RN-07 para socios Honorario) — ver docs/REVISION-MODULO-3.md. Corre después de
      * CatalogoDemoSeeder porque reutiliza el mismo usuario Administrador como registrador de los
      * préstamos de demostración.
+     *
+     * Módulo 4 (Préstamos y devoluciones): PrestamosDemoSeeder deja préstamos ACTIVOS y vencidos
+     * (a diferencia de los ya devueltos de SociosDemoSeeder), para poder ejercitar en vivo el flujo
+     * de devolución y ver sus efectos (RN-18, RN-07, alerta de reserva) ocurrir en el momento de la
+     * revisión — ver docs/REVISION-MODULO-4.md. Corre al final porque reutiliza los Tipos de Socio
+     * ya sembrados y al usuario Administrador como registrador.
      */
     public function run(): void
     {
@@ -31,6 +37,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             CatalogoDemoSeeder::class,
             SociosDemoSeeder::class,
+            PrestamosDemoSeeder::class,
         ]);
     }
 }

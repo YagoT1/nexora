@@ -17,26 +17,15 @@ class SocioController extends Controller
      * Origen: Paso 4 del briefing. Búsqueda tolerante a mayúsculas/minúsculas y acentos (R-1:
      * ILIKE por sí solo no resuelve acentos, ver migración que habilita la extensión `unaccent`).
      * Se busca simultáneamente sobre nombre_principal y cada elemento de nombres_alternativos
-     * (columna jsonb, R-3), sin reimplementar la comparación de acentos en PHP para no divergir
-     * del comportamiento de la base de datos.
+     * (columna jsonb, R-3). La comparación en sí vive en Socio::scopeBuscar() (extraída en Módulo 4
+     * para reutilizarla también al seleccionar un socio en el registro de un préstamo).
      */
     public function index(Request $request)
     {
         $busqueda = $request->string('busqueda')->trim()->toString();
 
         $socios = Socio::with('tipoSocio')
-            ->when($busqueda !== '', function ($query) use ($busqueda) {
-                $query->where(function ($q) use ($busqueda) {
-                    $q->whereRaw('unaccent(nombre_principal) ILIKE unaccent(?)', ["%{$busqueda}%"])
-                        ->orWhereRaw(
-                            "EXISTS (
-                                SELECT 1 FROM jsonb_array_elements_text(COALESCE(nombres_alternativos, '[]'::jsonb)) AS alt
-                                WHERE unaccent(alt) ILIKE unaccent(?)
-                            )",
-                            ["%{$busqueda}%"]
-                        );
-                });
-            })
+            ->when($busqueda !== '', fn ($query) => $query->buscar($busqueda))
             ->orderBy('nombre_principal')
             ->paginate(20)
             ->withQueryString();

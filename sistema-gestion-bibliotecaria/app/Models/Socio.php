@@ -53,4 +53,34 @@ class Socio extends Model
     {
         return $this->hasMany(Reserva::class);
     }
+
+    // Origen: Módulo 4 — Préstamos, Paso 1. Extrae a un método de dominio reutilizable el conteo de
+    // préstamos abiertos que ya se repetía inline en SocioController::show() (Módulo 3) y que RN-01
+    // necesita para verificar el límite del Tipo de Socio antes de registrar un nuevo préstamo.
+    public function cantidadPrestamosActivos(): int
+    {
+        return $this->prestamosDomiciliarios()
+            ->whereIn('estado', PrestamoDomiciliario::ESTADOS_ABIERTOS)
+            ->count();
+    }
+
+    /**
+     * Origen: Módulo 3 — Socios, Paso 4 (búsqueda tolerante a mayúsculas/minúsculas y acentos,
+     * R-1/R-3 de BRIEFING-MODULO-3-SOCIOS.md). Extraído desde SocioController::index() a un scope
+     * reutilizable en Módulo 4 (selección de socio al registrar un préstamo), evitando duplicar la
+     * comparación unaccent()/jsonb_array_elements_text en dos controladores (DRY).
+     */
+    public function scopeBuscar($query, string $termino)
+    {
+        return $query->where(function ($q) use ($termino) {
+            $q->whereRaw('unaccent(nombre_principal) ILIKE unaccent(?)', ["%{$termino}%"])
+                ->orWhereRaw(
+                    "EXISTS (
+                        SELECT 1 FROM jsonb_array_elements_text(COALESCE(nombres_alternativos, '[]'::jsonb)) AS alt
+                        WHERE unaccent(alt) ILIKE unaccent(?)
+                    )",
+                    ["%{$termino}%"]
+                );
+        });
+    }
 }

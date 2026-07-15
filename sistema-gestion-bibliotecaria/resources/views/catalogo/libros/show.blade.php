@@ -87,7 +87,13 @@
                     <td class="px-4 py-2">{{ $ejemplar->condicion_fisica ?? '—' }}</td>
                     <td class="px-4 py-2 capitalize">{{ $ejemplar->origen }}</td>
                     <td class="px-4 py-2">{{ $ejemplar->fecha_ingreso?->format('d/m/Y') ?? '—' }}</td>
-                    <td class="px-4 py-2 text-right">
+                    <td class="px-4 py-2 text-right space-x-3">
+                        {{-- Origen: Módulo 4 — Préstamos, Paso 4. Punto de entrada al registro de
+                             préstamo desde el ejemplar concreto; solo se ofrece si puede salir de
+                             la biblioteca (RN-08/RN-09) y no tiene ya un movimiento activo. --}}
+                        @if ($ejemplar->estadoActual() === \App\Models\Ejemplar::ESTADO_DISPONIBLE && $ejemplar->puedeSalirDeLaBiblioteca())
+                            <a href="{{ route('prestamos.create', ['ejemplar_id' => $ejemplar->id]) }}" class="text-green-700">Prestar</a>
+                        @endif
                         <a href="{{ route('catalogo.libros.ejemplares.edit', [$libro, $ejemplar]) }}" class="text-blue-700">Editar</a>
                     </td>
                 </tr>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Catalogo\CategoriaController;
 use App\Http\Controllers\Catalogo\EditorialController;
 use App\Http\Controllers\Catalogo\EjemplarController;
 use App\Http\Controllers\Catalogo\LibroController;
+use App\Http\Controllers\Prestamos\PrestamoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Socios\SocioController;
 use App\Http\Controllers\Socios\TipoSocioController;
@@ -87,3 +88,18 @@ Route::middleware(['auth', 'role:administrador,personal'])
         Route::resource('socios', SocioController::class, ['except' => ['destroy'], 'parameters' => ['socios' => 'socio']]);
     });
 // --- fin Módulo 3 (paso 1: Tipo de Socio) ---
+
+// --- Módulo 4 (Préstamos y devoluciones) — en construcción, ver
+// Fase 6 - Development/BRIEFING-MODULO-4-PRESTAMOS.md ---
+// Acceso: Administrador y Personal (mismo criterio que Catálogo y Socios).
+Route::middleware(['auth', 'role:administrador,personal'])
+    ->prefix('prestamos')
+    ->name('prestamos.')
+    ->group(function () {
+        Route::get('nuevo', [PrestamoController::class, 'create'])->name('create');
+        Route::post('/', [PrestamoController::class, 'store'])->name('store');
+        Route::get('devolucion', [PrestamoController::class, 'buscarDevolucion'])->name('devolucion.buscar');
+        Route::get('{prestamo}/devolucion', [PrestamoController::class, 'confirmarDevolucion'])->name('devolucion.confirmar');
+        Route::post('{prestamo}/devolucion', [PrestamoController::class, 'devolver'])->name('devolucion.store');
+    });
+// --- fin Módulo 4 (paso 2: registro de préstamo; paso 3: devolución) ---
