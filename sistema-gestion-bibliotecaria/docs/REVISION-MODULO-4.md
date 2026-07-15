@@ -5,10 +5,8 @@ préstamo, devolución, restricción automática por atraso, alerta de reserva p
 `docs/BOOTSTRAP.md`: asume el mismo entorno usado para cerrar los Módulos 1, 2 y 3 (`11 passed (25
 assertions)`, ver `docs/REVISION-MODULO-3.md`).
 
-**Estado de este módulo: código completo, no ejecutado.** Igual que los Módulos 1, 2 y 3 en su
-primera entrega, este documento se redacta antes de la primera corrida real contra PHP/PostgreSQL
-(esta sesión de Cowork no puede ejecutar PHP — ver `ADR-002`). No debe considerarse cerrado hasta
-obtener esa evidencia.
+**Estado de este módulo: cerrado, con evidencia objetiva (2026-07-15).** Primera ejecución real:
+`21 passed (59 assertions)`, sin fallos — ver `phase-summary.md`.
 
 ---
 
@@ -38,9 +36,9 @@ php artisan test --filter=Prestamos
 ```
 
 Cubre los 8 criterios de aceptación del módulo en 3 archivos bajo `tests/Feature/Prestamos/`
-(`AccesoPrestamosTest`, `RegistroPrestamoTest`, `DevolucionTest`) — 19 tests en total. **Todavía sin
-ejecutar contra un entorno real** — el resultado (verde o no) es la evidencia que falta para cerrar
-este módulo.
+(`AccesoPrestamosTest`, `RegistroPrestamoTest`, `DevolucionTest`) — 21 tests en total (4 + 10 + 7;
+corregido respecto del conteo de 19 registrado inicialmente en este documento, un error de conteo
+manual sin efecto en el código). **Ejecutado con éxito:** `21 passed (59 assertions)`.
 
 ---
 
@@ -109,8 +107,6 @@ cobertura de tests que sí los ejercita directamente.
 
 ## 6. Qué reportar
 
-Si algo de lo anterior no se comporta como se describe, o `php artisan test --filter=Prestamos` no
-da `19 passed` en la primera corrida real, es información valiosa: indicá el paso exacto, el
-usuario/rol usado, y qué esperabas vs. qué obtuviste. Los defectos encontrados se documentan en
-`phase-summary.md` (o en un ADR si ameritan una decisión de diseño) antes de declarar el módulo
-cerrado.
+Si algo de lo anterior no se comporta como se describe, es información valiosa: indicá el paso
+exacto, el usuario/rol usado, y qué esperabas vs. qué obtuviste. Los defectos encontrados se
+documentan en `phase-summary.md` (o en un ADR si ameritan una decisión de diseño).

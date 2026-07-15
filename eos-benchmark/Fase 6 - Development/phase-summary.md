@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **código completo, no cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) implementado conforme a `BRIEFING-MODULO-4-PRESTAMOS.md`, con seeder de demostración y suite de tests Feature (`tests/Feature/Prestamos/`, 19 tests) — todavía sin la primera ejecución real. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: obtener evidencia real de `php artisan test --filter=Prestamos` para poder declarar cerrado el Módulo 4.
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) completo y validado con evidencia real — `21 passed (59 assertions)` en la primera ejecución, sin defectos encontrados. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: determinar y ejecutar el Módulo 5 (Renovaciones y reservas) conforme a DA-08.
 
 ---
 
@@ -451,7 +451,10 @@ Entregado, en 6 pasos:
   lógica de esos dos controladores, solo agregando el enlace. Se agregaron también "Nuevo préstamo"
   y "Devolución" al menú de navegación principal, mismo criterio de acceso que Catálogo y Socios.
 - **Paso 5 (Tests Feature del Módulo 4) — código escrito:** 3 archivos bajo
-  `tests/Feature/Prestamos/` (19 tests en total):
+  `tests/Feature/Prestamos/` (21 tests en total — 4 + 10 + 7; corregido respecto del conteo de 19
+  registrado inicialmente en este documento y en `docs/REVISION-MODULO-4.md`, un error de conteo
+  manual detectado recién al confrontar la documentación con la primera ejecución real, sin ningún
+  efecto sobre el código ni sobre la cobertura):
   - `AccesoPrestamosTest`: control de acceso por rol (Voluntario bloqueado, Personal permitido,
     visitante redirigido a login), sobre `prestamos.create` y `prestamos.devolucion.buscar`.
   - `RegistroPrestamoTest`: los 6 criterios de aceptación del registro de préstamo, incluyendo un
@@ -470,9 +473,14 @@ Entregado, en 6 pasos:
   `ExcepcionAutorizada` de exención y una de material restringido, sembradas directamente porque su
   interfaz de alta todavía no existe).
 
-**No ejecutado en ningún entorno real todavía** (mismo motivo que todos los módulos anteriores en su
-primera entrega — `ADR-002`): el primer checkpoint de calidad real es correr `php artisan test
---filter=Prestamos` en el entorno de la Comisión Directiva.
+**Primera ejecución real (2026-07-15):** la Comisión Directiva corrió `php artisan db:seed
+--class=PrestamosDemoSeeder` y `php artisan test --filter=Prestamos` en su entorno (el mismo que
+validó los Módulos 1, 2 y 3) → **`21 passed (59 assertions)`, sin fallos.** Igual que el Módulo 3,
+no se encontró ningún defecto de código en esta primera corrida. El único hallazgo fue documental,
+no funcional: el conteo de tests registrado en este documento y en `docs/REVISION-MODULO-4.md`
+decía 19; el resultado real y el conteo directo de los tres archivos de test confirman 21 (4 en
+`AccesoPrestamosTest`, 10 en `RegistroPrestamoTest`, 7 en `DevolucionTest`). Corregido en ambos
+documentos.
 
 ## Decisión
 
@@ -517,14 +525,8 @@ primera corrida, cerrando el módulo sin necesidad de corrección. Ningún riesg
 briefing (R-1, R-2, R-3) quedó pendiente de decisión: los tres se resolvieron o se documentaron
 como no bloqueantes dentro del propio briefing.
 
-**Módulo 4 — Préstamos y devoluciones: código completo, no cerrado (2026-07-15).** Los 6 pasos del
-plan de implementación recomendado por `BRIEFING-MODULO-4-PRESTAMOS.md` están completos: registro
-de préstamo (RN-01, RN-02, RN-04, RN-06, RN-08/RN-09, RN-13), devolución (RN-12, RN-18, RN-07,
-alerta de reserva pendiente), puntos de entrada desde Catálogo y Socios, y la suite de tests
-Feature correspondiente (19 tests en 3 archivos), más seeder de demostración y guía de revisión
-funcional (`docs/REVISION-MODULO-4.md`). Igual que Módulo 3 en su primera entrega, este código
-todavía no tiene ninguna ejecución real: no puede declararse cerrado hasta correr `php artisan test
---filter=Prestamos` en un entorno con PHP/PostgreSQL reales y obtener esa evidencia. Ningún riesgo
-identificado en el briefing (R-1, R-2, R-3) quedó pendiente de decisión de producto o dominio: los
-tres son de naturaleza técnica y de alcance, resueltos o documentados como no bloqueantes dentro
-del propio briefing.
+**Módulo 4 — Préstamos y devoluciones: cerrado (2026-07-15).** Los 6 pasos del plan de
+implementación recomendado por `BRIEFING-MODULO-4-PRESTAMOS.md` están completos: registro de
+préstamo (RN-01, RN-02, RN-04, RN-06, RN-08/RN-09, RN-13), devolución (RN-12, RN-18, RN-07, alerta
+de reserva pendiente), puntos de entrada desde Catálogo y Socios, y la suite de tests Feature
+correspondiente 
