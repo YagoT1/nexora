@@ -10,6 +10,7 @@ use App\Http\Controllers\Excepciones\ExcepcionController;
 use App\Http\Controllers\Prestamos\PrestamoController;
 use App\Http\Controllers\Prestamos\ReservaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Restricciones\RestriccionController;
 use App\Http\Controllers\Socios\SocioController;
 use App\Http\Controllers\Socios\TipoSocioController;
 use Illuminate\Support\Facades\Route;
@@ -135,3 +136,18 @@ Route::middleware(['auth', 'role:administrador'])
         Route::patch('{excepcion}/revocar', [ExcepcionController::class, 'revocar'])->name('revocar');
     });
 // --- fin Módulo 6 (paso 3: CRUD de Excepciones Autorizadas) ---
+
+// --- Módulo 6 (Restricciones manuales) — ver
+// Fase 6 - Development/BRIEFING-MODULO-6-EXCEPCIONES-RESTRICCIONES.md, Paso 4 (CU-3).
+// Acceso: Administrador y Personal (a diferencia del grupo 'excepciones.*' de arriba, solo
+// Administrador por RN-10) — Riesgo R-4: dos middlewares de rol distintos dentro del mismo módulo.
+// Anidada bajo Socio, igual criterio que 'libros.reservas' del Módulo 5: una restricción siempre
+// existe en el contexto de un socio puntual.
+Route::middleware(['auth', 'role:administrador,personal'])
+    ->prefix('socios/{socio}/restricciones')
+    ->name('restricciones.')
+    ->group(function () {
+        Route::get('/', [RestriccionController::class, 'index'])->name('index');
+        Route::post('/', [RestriccionController::class, 'store'])->name('store');
+    });
+// --- fin Módulo 6 (paso 4: alta y listado de Restricciones manuales) ---
