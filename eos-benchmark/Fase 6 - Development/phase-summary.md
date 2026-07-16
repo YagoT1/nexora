@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) completo y validado con evidencia real — `21 passed (59 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 5 (de 10) **cerrado**: Renovaciones y reservas (renovación con bloqueo por reserva RN-03/RN-19, alta de reserva, asignación automática con cálculo de ventana de retiro RN-05/D-13, panel de alertas) completo y validado con evidencia real — `18 passed (38 assertions)` en la primera ejecución, sin defectos encontrados. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: determinar y ejecutar el Módulo 6 (Excepciones y restricciones) conforme a DA-08.
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) completo y validado con evidencia real — `21 passed (59 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 5 (de 10) **cerrado**: Renovaciones y reservas (renovación con bloqueo por reserva RN-03/RN-19, alta de reserva, asignación automática con cálculo de ventana de retiro RN-05/D-13, panel de alertas) completo y validado con evidencia real — `18 passed (38 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 6 (de 10) **código completo, pendiente de ejecución real**: Excepciones y restricciones (CRUD de `ExcepcionAutorizada` restringido a Administrador vía RN-10, alta y listado de `RestriccionSocio` manual vía CU-3, migración production-safe del caso histórico del relevamiento) escrito completo, con 26 tests Feature/Unit nuevos, sin ninguna corrida real reportada todavía contra PHP/PostgreSQL (ver `ADR-002` y `docs/REVISION-MODULO-6.md`). Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: obtener evidencia real de ejecución de la suite del Módulo 6 (comando exacto en `docs/REVISION-MODULO-6.md`, sección 1) antes de declararlo cerrado; una vez cerrado, el Módulo 7 (Tareas programadas) es el siguiente en la secuencia de DA-08.
 
 ---
 
@@ -572,6 +572,83 @@ assertions)`. **Total: `18 passed (38 assertions)`, sin fallos.** Igual que los 
 se encontró ningún defecto de código — los 14 tests nuevos de este módulo pasaron sin necesidad de
 corrección alguna.
 
+### Módulo 6 — Excepciones y restricciones: código completo (2026-07-16)
+
+Con el Módulo 5 formalmente cerrado con evidencia objetiva, la Comisión Directiva confirmó el `git
+push origin main` y otorgó nuevamente autonomía para actuar según el estado real del proyecto. Se
+revisó DA-08 (Excepciones y restricciones es el módulo #6, con precondición explícita "Módulos 3 y
+4 completos" — ambos ya cerrados), el Plan de Implementación v2 (RN-06, RN-07, RN-09, RN-10, RN-11,
+D-03) y el estado real del código (`ExcepcionAutorizada` y `RestriccionSocio` ya existían completas
+desde el Módulo 1, con su validación al prestar ya implementada desde el Módulo 4 — solo faltaba el
+CRUD de gestión), concluyendo que correspondía iniciar Módulo 6 tal como estaba programado. Se
+redactó `BRIEFING-MODULO-6-EXCEPCIONES-RESTRICCIONES.md` como paso previo obligatorio,
+identificando y resolviendo dentro del propio briefing cinco decisiones de arquitectura (D-14 a
+D-18: formalización de constantes de estado/tipo ya documentadas solo como comentario, estado
+derivado por cómputo — Decisión D-15, análoga a D-09 — y centralización de la consulta de
+vigencia) y cuatro riesgos (R-1 a R-4: ausencia deliberada de tarea programada de vencimiento,
+falta de un campo real de "código de socio" para representar el caso histórico del relevamiento,
+seeder production-safe separado de los `*DemoSeeder`, y dos middlewares de rol distintos dentro del
+mismo módulo).
+
+Entregado, en 7 pasos:
+
+- **Paso 1 (ajustes de base) — código escrito:** constantes `ExcepcionAutorizada::ESTADO_VIGENTE`/
+  `ESTADO_VENCIDA`/`ESTADO_REVOCADA` y la relación `revocadoPor()` (D-14, faltante pese a que la
+  columna ya existía desde el Módulo 1); `RestriccionSocio::TIPO_AUTOMATICA`/`TIPO_MANUAL` (D-16),
+  reemplazando el literal `'automatica'` que ya usaba `PrestamoController::devolver()` (Módulo 4);
+  trait `Auditable` agregado a `RestriccionSocio` (D-17) — hasta este módulo todas sus filas eran
+  generadas por el sistema, la restricción manual introduce la primera vía de creación humana.
+- **Paso 2 (centralización de la consulta de vigencia) — código escrito:**
+  `ExcepcionAutorizada::vigentePara($entidad, $tipo)` (D-18), extraída del método privado
+  `PrestamoController::tieneExcepcionVigente()` (eliminado) y reutilizada también por
+  `Ejemplar::puedeSalirDeLaBiblioteca()` (antes duplicaba la misma consulta inline) — sin cambio de
+  comportamiento observable, verificado contra la suite existente de los Módulos 2 y 4.
+- **Paso 3 (CRUD de Excepciones Autorizadas) — código escrito:** `ExcepcionController` (namespace
+  `App\Http\Controllers\Excepciones`), rutas `excepciones.*` con `role:administrador` únicamente
+  (RN-10) — `index` (listado con filtros por tipo y entidad afectada), `create`/`store` (CU-1, con
+  `ExcepcionAutorizada::ENTIDADES_POR_TIPO` como única fuente de verdad del mapeo tipo→entidad, D-03),
+  `revocar` (CU-2). RN-11: `autorizado_por`/`fecha_autorizacion` los fija siempre el servidor, nunca
+  el formulario.
+- **Paso 4 (alta y listado de Restricciones manuales) — código escrito:** `RestriccionController`
+  (namespace `App\Http\Controllers\Restricciones`), anidado bajo Socio
+  (`socios/{socio}/restricciones`), con `role:administrador,personal` (CU-3) — a diferencia del
+  grupo `excepciones.*`, solo Administrador (Riesgo R-4: dos middlewares de rol distintos dentro del
+  mismo módulo). Salvaguarda de integridad agregada (no una regla de negocio nueva): no se permite
+  crear una segunda restricción activa simultánea sobre el mismo socio.
+- **Paso 5 (puntos de entrada en la UI existente) — código escrito:** enlaces "Restricciones" y
+  "Excepciones" (este último solo para Administrador) en `socios.socios.show`; enlace "Excepciones"
+  por ejemplar en `catalogo.libros.show`, visible solo cuando la modalidad de acceso es "Restringido
+  a autorización" (RN-09); enlace de navegación "Excepciones" en `layouts/app.blade.php`, dentro del
+  bloque ya existente de Administrador. `ExcepcionController::index()` se extendió con un filtro
+  adicional `entidad_afectada_id` para poder enlazar "excepciones sobre esta entidad puntual" sin
+  construir ninguna pantalla de navegación nueva.
+- **Paso 6 (migración de casos históricos) — código escrito:** `ExcepcionesHistoricasSeeder`
+  (nuevo, registrado en `DatabaseSeeder`), a diferencia de todos los `*DemoSeeder` de módulos
+  anteriores, sin guarda de entorno de producción (R-3: el caso histórico es una decisión real ya
+  tomada por la Comisión Directiva, no un dato ficticio) e idempotente vía `firstOrCreate`. Migra el
+  caso 7.2 del relevamiento (excepción individual de penalización, motivo "Colaboración histórica
+  con la institución", vigencia indefinida); el caso 7.1 (socios honorarios) no requirió ninguna
+  acción — ya estaba cubierto desde el Módulo 1 vía `TipoSocioSeeder`. Limitación documentada (R-2):
+  el dominio no tiene ningún campo de "código de socio" para representar literalmente el
+  identificador informal del relevamiento — el seeder usa un `Socio` placeholder identificable por
+  DNI y motivo, con instrucciones explícitas en el propio archivo sobre cómo ajustarlo antes de un
+  despliegue con datos reales.
+- **Paso 7 (tests Feature + unitarios, y cierre documental) — código escrito:** 5 archivos nuevos,
+  26 tests en total —
+  `tests/Feature/Excepciones/AccesoExcepcionesTest.php` (6, control de acceso RN-10),
+  `tests/Feature/Excepciones/ExcepcionAutorizadaTest.php` (6, criterios de aceptación 2/3/5/6),
+  `tests/Feature/Restricciones/AccesoRestriccionesTest.php` (5, control de acceso CU-3/R-4),
+  `tests/Feature/Restricciones/RestriccionSocioTest.php` (4, alta manual y listado), y
+  `tests/Unit/ExcepcionAutorizadaEstadoVisibleTest.php` (5, unitario puro sobre `estadoVisible()`,
+  D-15). El criterio de aceptación 4 (socio con excepción de exención vigente puede recibir
+  préstamo con restricción activa) ya estaba cubierto desde el Módulo 4 por `RegistroPrestamoTest` y
+  no se duplicó (D-18 no cambió ningún comportamiento observable de ese test). Documentación de
+  cierre: `docs/REVISION-MODULO-6.md` (nuevo).
+
+**Pendiente de ejecución real:** a diferencia de los Módulos 2 a 5, este módulo todavía no tiene
+ninguna corrida reportada por el usuario contra PHP/PostgreSQL reales (ver `ADR-002`) — el comando
+exacto a correr y reportar está en `docs/REVISION-MODULO-6.md`, sección 1.
+
 ## Decisión
 
 Módulo 1 queda **cerrado**: código, migraciones, seeders y suite de tests completa ejecutados con
@@ -646,3 +723,18 @@ Módulos 3 y 4, no se encontró ningún defecto de código en esta primera corri
 a los archivos de test directamente, sin impacto en el código de la aplicación. Ningún riesgo
 identificado en el briefing (D-13, R-1, R-2, R-3) quedó pendiente de decisión de producto o
 dominio: todos se resolvieron o se documentaron como no bloqueantes dentro del propio briefing.
+
+**Módulo 6 — Excepciones y restricciones: código completo, no cerrado (2026-07-16).** Los 7 pasos
+del plan de implementación recomendado por `BRIEFING-MODULO-6-EXCEPCIONES-RESTRICCIONES.md` están
+completos: CRUD de `ExcepcionAutorizada` restringido a Administrador (RN-10, RN-11), alta y listado
+de `RestriccionSocio` manual (CU-3), centralización de la consulta de vigencia (D-18), puntos de
+entrada en la UI existente, migración production-safe del caso histórico del relevamiento (7.2), y
+la suite de tests correspondiente (26 tests nuevos en 5 archivos), más guía de revisión funcional
+(`docs/REVISION-MODULO-6.md`). A diferencia de los Módulos 2 a 5, **este módulo todavía no tiene
+ninguna ejecución real reportada** contra PHP/PostgreSQL — no puede declararse cerrado hasta
+obtener esa evidencia (mismo estándar de cierre exigido a todos los módulos anteriores, `ADR-006`).
+Ningún riesgo identificado en el briefing (R-1 a R-4) quedó pendiente de decisión de producto o
+dominio: los cuatro se resolvieron o se documentaron como no bloqueantes dentro del propio
+briefing; el único punto abierto (R-2, la falta de un campo real para el código de socio del
+relevamiento) es una limitación de datos del entorno, documentada para que la Comisión Directiva la
+resuelva al desplegar en producción, no un defecto de diseño.
