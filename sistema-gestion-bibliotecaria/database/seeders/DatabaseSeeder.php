@@ -34,6 +34,14 @@ class DatabaseSeeder extends Seeder
      * reservable sin reservas todavía, y una reserva ya en 'personal_alertado' con su fecha límite
      * de retiro ya calculada (RN-05/D-13) — ver docs/REVISION-MODULO-5.md. Corre al final, después
      * de PrestamosDemoSeeder, por el mismo motivo (reutiliza Tipos de Socio y Administrador).
+     *
+     * Módulo 6 (Excepciones y restricciones): ExcepcionesHistoricasSeeder, a diferencia de todos
+     * los *DemoSeeder de arriba, SÍ puede correr en producción (Riesgo R-3 del briefing) — migra el
+     * caso histórico real del relevamiento (7.2), no datos ficticios. Se ubica junto a
+     * TipoSocioSeeder/ParametroConfiguracionSeeder (production-safe) en vez de junto a los
+     * *DemoSeeder. Depende de que ya exista un Administrador activo (creado por AdminUserSeeder en
+     * desarrollo, o dado de alta manualmente en un despliegue real) — si no hay ninguno todavía, no
+     * crea nada y puede volver a correrse más adelante (ver docs/REVISION-MODULO-6.md).
      */
     public function run(): void
     {
@@ -41,6 +49,7 @@ class DatabaseSeeder extends Seeder
             TipoSocioSeeder::class,
             ParametroConfiguracionSeeder::class,
             AdminUserSeeder::class,
+            ExcepcionesHistoricasSeeder::class,
             CatalogoDemoSeeder::class,
             SociosDemoSeeder::class,
             PrestamosDemoSeeder::class,
