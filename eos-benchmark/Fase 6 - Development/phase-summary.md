@@ -8,7 +8,7 @@
 
 ## Estado
 
-Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) completo y validado con evidencia real — `21 passed (59 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 5 (de 10) — Renovaciones y reservas (renovación con bloqueo por reserva RN-03/RN-19, alta de reserva, asignación automática con cálculo de ventana de retiro RN-05/D-13, panel de alertas) **código completo, no cerrado**: no se ha obtenido todavía evidencia real de ejecución (`ADR-002`) — 14 tests nuevos escritos y verificados estructuralmente, pendientes de correr contra PHP/PostgreSQL reales. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: obtener evidencia real de ejecución del Módulo 5 y, según el resultado, cerrarlo o corregir.
+Módulo 1 (de 10) **cerrado**: entorno validado, proyecto Laravel 12 creado, migrado, sembrado, iniciado y con su suite de tests completa pasando (38/38). Módulo 2 (de 10) **cerrado**: Catálogo (Autor, Editorial, Categoría, Libro, Ejemplar, búsqueda, RN-21) completo y validado con evidencia real — `31 passed (87 assertions)` tras corregir dos defectos preexistentes revelados por la ejecución (`ADR-012`). Módulo 3 (de 10) **cerrado**: Socios (Tipo de Socio, Socio, búsqueda tolerante a acentos, vista de mostrador, historial paginado) completo y validado con evidencia real — `11 passed (25 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 4 (de 10) **cerrado**: Préstamos y devoluciones (registro de préstamo con RN-01/RN-02/RN-04/RN-06/RN-08/RN-09/RN-13, devolución con RN-12/RN-18/RN-07 y alerta de reserva pendiente) completo y validado con evidencia real — `21 passed (59 assertions)` en la primera ejecución, sin defectos encontrados. Módulo 5 (de 10) **cerrado**: Renovaciones y reservas (renovación con bloqueo por reserva RN-03/RN-19, alta de reserva, asignación automática con cálculo de ventana de retiro RN-05/D-13, panel de alertas) completo y validado con evidencia real — `18 passed (38 assertions)` en la primera ejecución, sin defectos encontrados. Repositorio de código consolidado en un único monorepo — `nexora` (https://github.com/YagoT1/nexora.git) es la fuente única de verdad para código, documentación, trazabilidad e historial del proyecto (`ADR-010`), con el commit de consolidación ya publicado (`515c161`). El entorno temporal de validación (`sgb-laravel/`) fue verificado sin pérdida de contenido y eliminado (`ADR-009`, adenda de cierre). Único pendiente no bloqueante: pre-checklist de infraestructura (ver "Próximo trabajo", punto 4). Próximo paso: determinar y ejecutar el Módulo 6 (Excepciones y restricciones) conforme a DA-08.
 
 ---
 
@@ -562,11 +562,15 @@ Entregado, en 6 pasos (más un Paso 7 documental cerrando el módulo, aquí):
   vivo" (RN-05 disparándose durante la propia revisión) se ejercita reutilizando el caso ya sembrado
   por `PrestamosDemoSeeder` (Módulo 4), sin duplicar datos.
 
-**Sin ejecutar todavía (ver `ADR-002`):** a diferencia de los Módulos 2, 3 y 4, este módulo no tiene
-todavía ninguna ejecución real contra PHP/PostgreSQL — los 14 tests nuevos fueron verificados
-únicamente por revisión estática y por reconstrucción manual tras varios episodios de corrupción de
-archivo durante la escritura (mismo patrón de entorno ya documentado, sin relación con la corrección
-de código). El módulo permanece **código completo, no cerrado** hasta obtener esa evidencia.
+**Primera ejecución real (2026-07-16):** la Comisión Directiva corrió `php artisan db:seed
+--class=RenovacionesReservasDemoSeeder` seguido de `php artisan test` sobre los cuatro archivos de
+este módulo, en dos tandas (la primera intentó tres `--filter` encadenados, lo que reveló que
+`artisan test` solo conserva el último `--filter` cuando se repite la opción — corregido apuntando
+a los archivos directamente): `AccesoPrestamosTest` → `6 passed (7 assertions)`;
+`RenovacionTest` + `ReservaTest` + `ReservaCalcularFechaLimiteRetiroTest` → `12 passed (31
+assertions)`. **Total: `18 passed (38 assertions)`, sin fallos.** Igual que los Módulos 3 y 4, no
+se encontró ningún defecto de código — los 14 tests nuevos de este módulo pasaron sin necesidad de
+corrección alguna.
 
 ## Decisión
 
@@ -626,17 +630,19 @@ briefing. Único hallazgo de esta revisión: un error de conteo de tests en la d
 vez de 21), sin impacto en el código, corregido en este documento y en
 `docs/REVISION-MODULO-4.md`.
 
-**Módulo 5 — Renovaciones y reservas: código completo, no cerrado (2026-07-15).** Los 6 pasos del
-plan de implementación recomendado por `BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md` están
-completos: renovación de préstamo con bloqueo por reserva activa (RN-03) y actualización de
-vencimiento (RN-19), alta de reserva con validación de duplicados, asignación automática de la
-reserva más antigua al devolver un ejemplar con cálculo de la ventana de retiro de atención al
-público (RN-05, Decisión D-13), refactor de RN-21 a la constante de estado, puntos de entrada en la
-UI existente, y 14 tests nuevos (unitarios y Feature), más seeder de demostración y guía de revisión
-funcional (`docs/REVISION-MODULO-5.md`). A diferencia de los Módulos 2, 3 y 4, **todavía no se
-obtuvo ninguna ejecución real** de esta suite contra PHP/PostgreSQL (`ADR-002`): el módulo no se
-declara cerrado hasta que la Comisión Directiva corra `php artisan db:seed
---class=RenovacionesReservasDemoSeeder` y `php artisan test --filter=Renovacion --filter=Reserva`
-(o los filtros equivalentes) y confirme el resultado. Ningún riesgo identificado en el briefing
-(D-13, R-1, R-2, R-3) quedó pendiente de decisión de producto o dominio: todos se resolvieron o se
-documentaron como no bloqueantes dentro del propio briefing.
+**Módulo 5 — Renovaciones y reservas: cerrado (2026-07-16).** Los 6 pasos del plan de
+implementación recomendado por `BRIEFING-MODULO-5-RENOVACIONES-RESERVAS.md` están completos:
+renovación de préstamo con bloqueo por reserva activa (RN-03) y actualización de vencimiento
+(RN-19), alta de reserva con validación de duplicados, asignación automática de la reserva más
+antigua al devolver un ejemplar con cálculo de la ventana de retiro de atención al público (RN-05,
+Decisión D-13), refactor de RN-21 a la constante de estado, puntos de entrada en la UI existente,
+y la suite de tests correspondiente (14 tests nuevos en 4 archivos, más los 4 preexistentes de
+`AccesoPrestamosTest`), más seeder de demostración y guía de revisión funcional
+(`docs/REVISION-MODULO-5.md`). Primera ejecución real (`php artisan db:seed
+--class=RenovacionesReservasDemoSeeder` + `php artisan test` sobre los cuatro archivos, mismo
+entorno que validó los Módulos 1 a 4): **`18 passed (38 assertions)`, sin fallos** — igual que los
+Módulos 3 y 4, no se encontró ningún defecto de código en esta primera corrida. Único hallazgo:
+`artisan test` no admite `--filter` repetido (conserva solo el último valor) — corregido apuntando
+a los archivos de test directamente, sin impacto en el código de la aplicación. Ningún riesgo
+identificado en el briefing (D-13, R-1, R-2, R-3) quedó pendiente de decisión de producto o
+dominio: todos se resolvieron o se documentaron como no bloqueantes dentro del propio briefing.

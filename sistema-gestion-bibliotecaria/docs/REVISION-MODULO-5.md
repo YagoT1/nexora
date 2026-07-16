@@ -6,10 +6,8 @@ reserva más antigua al devolverse un ejemplar, con cálculo de ventana de retir
 `docs/BOOTSTRAP.md`: asume el mismo entorno usado para cerrar los Módulos 1 a 4 (`21 passed (59
 assertions)`, ver `docs/REVISION-MODULO-4.md`).
 
-**Estado de este módulo: código completo, no cerrado.** Ver nota de `ADR-002`: este sandbox no
-puede ejecutar PHP. Los tests están escritos y verificados estructuralmente, pero ninguno se ha
-corrido todavía contra PHP/PostgreSQL reales — el módulo no se declara cerrado hasta obtener esa
-evidencia (mismo criterio que los cuatro módulos anteriores).
+**Estado de este módulo: cerrado, con evidencia objetiva (2026-07-16).** Ejecución real: `18 passed
+(38 assertions)`, sin fallos — ver `phase-summary.md`.
 
 ---
 
@@ -44,7 +42,10 @@ RenovacionTest.php` (4 tests), `tests/Feature/Prestamos/ReservaTest.php` (4 test
 `tests/Unit/ReservaCalcularFechaLimiteRetiroTest.php` (4 tests, unitario puro sobre el algoritmo de
 la Decisión D-13), y los 2 tests nuevos agregados a `tests/Feature/Prestamos/
 AccesoPrestamosTest.php` (control de acceso a la nueva ruta de alta de reserva) — 14 tests nuevos
-en total. **Todavía no ejecutados contra PHP real** — ver nota de estado arriba.
+en total (más los 4 preexistentes de `AccesoPrestamosTest`, 18 en total en estos cuatro archivos).
+**Ejecutado con éxito:** `AccesoPrestamosTest` → `6 passed (7 assertions)`; `RenovacionTest` +
+`ReservaTest` + `ReservaCalcularFechaLimiteRetiroTest` → `12 passed (31 assertions)`. Total: `18
+passed (38 assertions)`, sin fallos.
 
 ---
 
@@ -117,10 +118,7 @@ sobre su libro — situación ya cubierta por ese seeder, no duplicada aquí).
 
 ## 6. Qué reportar
 
-Si algo de lo anterior no se comporta como se describe, es información valiosa: indicá el paso
-exacto, el usuario/rol usado, y qué esperabas vs. qué obtuviste. Los defectos encontrados se
-documentan en `phase-summary.md` (o en un ADR si ameritan una decisión de diseño). **Recordatorio
-específico de este módulo:** además de la revisión visual, es indispensable correr `php artisan
-test --filter=Renovacion`, `--filter=Reserva` y `--filter=AccesoPrestamos` y reportar el resultado
-exacto (tests/assertions, y el detalle de cualquier fallo) — es la evidencia que falta para poder
-declarar cerrado el Módulo 5.
+Si algo de lo anterior no se comporta como se describe durante la revisión visual, es información
+valiosa: indicá el paso exacto, el usuario/rol usado, y qué esperabas vs. qué obtuviste. Los
+defectos encontrados se documentan en `phase-summary.md` (o en un ADR si ameritan una decisión de
+diseño).
