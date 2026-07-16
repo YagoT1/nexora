@@ -14,7 +14,17 @@
         </a>
     </div>
 
+    @if ($entidadIdFiltro !== '')
+        <div class="mb-4 flex items-center justify-between rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <span>Mostrando solo las excepciones de la entidad seleccionada.</span>
+            <a href="{{ route('excepciones.index', ['tipo' => $tipoFiltro]) }}" class="text-blue-700 underline">Ver todas</a>
+        </div>
+    @endif
+
     <form method="GET" action="{{ route('excepciones.index') }}" class="flex flex-wrap gap-3 mb-4 bg-white border border-gray-200 rounded p-4">
+        @if ($entidadIdFiltro !== '')
+            <input type="hidden" name="entidad_afectada_id" value="{{ $entidadIdFiltro }}">
+        @endif
         <div>
             <label class="block text-xs text-gray-600 mb-1">Tipo</label>
             <select name="tipo" class="border-gray-300 rounded text-sm">

@@ -97,6 +97,12 @@
                         @if ($ejemplar->estadoActual() === \App\Models\Ejemplar::ESTADO_DISPONIBLE && $ejemplar->puedeSalirDeLaBiblioteca())
                             <a href="{{ route('prestamos.create', ['ejemplar_id' => $ejemplar->id]) }}" class="text-green-700">Prestar</a>
                         @endif
+                        {{-- Origen: Módulo 6, Paso 5. Solo relevante para "Restringido a autorización"
+                             (RN-09) y solo visible para Administrador (RN-10: único rol con acceso
+                             al CRUD de ExcepcionAutorizada). --}}
+                        @if ($ejemplar->modalidad_acceso === \App\Models\Ejemplar::MODALIDAD_RESTRINGIDO && auth()->user()->esAdministrador())
+                            <a href="{{ route('excepciones.index', ['entidad_afectada_type' => \App\Models\Ejemplar::class, 'entidad_afectada_id' => $ejemplar->id]) }}" class="text-amber-700">Excepciones</a>
+                        @endif
                         <a href="{{ route('catalogo.libros.ejemplares.edit', [$libro, $ejemplar]) }}" class="text-blue-700">Editar</a>
                     </td>
                 </tr>

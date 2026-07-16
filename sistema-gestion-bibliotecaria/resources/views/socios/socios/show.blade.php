@@ -19,6 +19,12 @@
                  préstamo: el personal ya está viendo el estado del socio (restricción, límite)
                  antes de decidir continuar. --}}
             <a href="{{ route('prestamos.create', ['socio_id' => $socio->id]) }}" class="text-sm text-green-700">Registrar préstamo</a>
+            {{-- Origen: Módulo 6, Paso 5. Puntos de entrada al CRUD de Restricciones/Excepciones ya
+                 construido en los Pasos 3 y 4, sin pantallas de navegación nuevas. --}}
+            <a href="{{ route('restricciones.index', $socio) }}" class="text-sm text-amber-700">Restricciones</a>
+            @if (auth()->user()->esAdministrador())
+                <a href="{{ route('excepciones.index', ['entidad_afectada_type' => \App\Models\Socio::class, 'entidad_afectada_id' => $socio->id]) }}" class="text-sm text-amber-700">Excepciones</a>
+            @endif
             <a href="{{ route('socios.socios.edit', $socio) }}" class="text-sm text-blue-700">Editar</a>
             <a href="{{ route('socios.socios.index') }}" class="text-sm text-gray-500">Volver al listado</a>
         </div>

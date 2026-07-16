@@ -30,6 +30,9 @@
                         <a href="{{ route('prestamos.devolucion.buscar') }}" class="text-sm">Devolución</a>
                     @endif
                     @if (auth()->user()->esAdministrador())
+                        {{-- Origen: Módulo 6, Paso 5. RN-10: el CRUD de ExcepcionAutorizada es
+                             exclusivo de Administrador — mismo criterio que "Administración". --}}
+                        <a href="{{ route('excepciones.index') }}" class="text-sm">Excepciones</a>
                         <a href="{{ route('admin.users.index') }}" class="text-sm">Administración</a>
                     @endif
                     <span class="text-sm text-gray-500">{{ auth()->user()->name }} ({{ auth()->user()->rol }})</span>
@@ -50,6 +53,7 @@
                     <a href="{{ route('prestamos.devolucion.buscar') }}" class="block py-2 text-sm">Devolución</a>
                 @endif
                 @if (auth()->user()->esAdministrador())
+                    <a href="{{ route('excepciones.index') }}" class="block py-2 text-sm">Excepciones</a>
                     <a href="{{ route('admin.users.index') }}" class="block py-2 text-sm">Administración</a>
                 @endif
                 <form method="POST" action="{{ route('logout') }}">

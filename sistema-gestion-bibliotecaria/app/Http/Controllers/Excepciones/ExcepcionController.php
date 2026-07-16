@@ -20,21 +20,28 @@ class ExcepcionController extends Controller
      * entidad." El estado mostrado es el derivado (ExcepcionAutorizada::estadoVisible(), Decisión
      * D-15), no la columna cruda — para que una excepción vencida aparezca como tal sin depender de
      * ninguna tarea programada.
+     *
+     * Origen: Módulo 6, Paso 5. `entidad_afectada_id` es un filtro adicional al de tipo/clase de
+     * entidad ya existente (Paso 3) — permite enlazar directamente desde socios.socios.show y
+     * catalogo.libros.show ("excepciones sobre este Socio/Ejemplar puntual"), sin construir una
+     * pantalla de navegación dedicada nueva (el plan solo pide reutilizar el CRUD existente).
      */
     public function index(Request $request)
     {
         $tipoFiltro = $request->string('tipo')->toString();
         $entidadFiltro = $request->string('entidad_afectada_type')->toString();
+        $entidadIdFiltro = $request->string('entidad_afectada_id')->toString();
 
         $excepciones = ExcepcionAutorizada::query()
             ->with(['entidadAfectada', 'autorizadoPor', 'revocadoPor'])
             ->when($tipoFiltro !== '', fn ($q) => $q->where('tipo', $tipoFiltro))
             ->when($entidadFiltro !== '', fn ($q) => $q->where('entidad_afectada_type', $entidadFiltro))
+            ->when($entidadIdFiltro !== '', fn ($q) => $q->where('entidad_afectada_id', $entidadIdFiltro))
             ->latest('fecha_autorizacion')
             ->paginate(20)
             ->withQueryString();
 
-        return view('excepciones.index', compact('excepciones', 'tipoFiltro', 'entidadFiltro'));
+        return view('excepciones.index', compact('excepciones', 'tipoFiltro', 'entidadFiltro', 'entidadIdFiltro'));
     }
 
     /**
