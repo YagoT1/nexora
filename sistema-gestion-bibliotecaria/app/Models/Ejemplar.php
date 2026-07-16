@@ -166,18 +166,19 @@ class Ejemplar extends Model
      * Origen del uso: Paso 7 del briefing (RN-21, alerta al cambiar modalidad con reservas
      * pendientes). Se define acá, en el modelo, y no en el controlador, porque Módulo 4 (préstamos)
      * va a necesitar exactamente esta misma verificación antes de autorizar cualquier salida.
+     *
+     * Origen: Módulo 6, Decisión D-18. La consulta "¿tiene una excepción vigente de este tipo?" se
+     * centralizó en ExcepcionAutorizada::vigentePara(), reutilizada también por PrestamoController
+     * (Módulo 4) — evita mantener dos copias del mismo filtro polimórfico.
      */
     public function puedeSalirDeLaBiblioteca(): bool
     {
         return match ($this->modalidad_acceso) {
             self::MODALIDAD_LIBRE_CIRCULACION => true,
             self::MODALIDAD_SOLO_SALA => false,
-            self::MODALIDAD_RESTRINGIDO => ExcepcionAutorizada::query()
-                ->where('entidad_afectada_type', self::class)
-                ->where('entidad_afectada_id', $this->id)
-                ->where('tipo', ExcepcionAutorizada::TIPO_AUTORIZACION_MATERIAL_RESTRINGIDO)
-                ->get()
-                ->contains(fn (ExcepcionAutorizada $excepcion) => $excepcion->estaVigente()),
+            self::MODALIDAD_RESTRINGIDO => ExcepcionAutorizada::vigentePara(
+                $this, ExcepcionAutorizada::TIPO_AUTORIZACION_MATERIAL_RESTRINGIDO
+            ),
             default => false,
         };
     }

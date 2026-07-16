@@ -6,6 +6,7 @@ use App\Http\Controllers\Catalogo\CategoriaController;
 use App\Http\Controllers\Catalogo\EditorialController;
 use App\Http\Controllers\Catalogo\EjemplarController;
 use App\Http\Controllers\Catalogo\LibroController;
+use App\Http\Controllers\Excepciones\ExcepcionController;
 use App\Http\Controllers\Prestamos\PrestamoController;
 use App\Http\Controllers\Prestamos\ReservaController;
 use App\Http\Controllers\ProfileController;
@@ -117,3 +118,20 @@ Route::middleware(['auth', 'role:administrador,personal'])
 // --- fin Módulo 4 (paso 2: registro de préstamo; paso 3: devolución) ---
 // --- Módulo 5 (paso 3: renovación, dentro del grupo 'prestamos.*'; paso 4: reservas, dentro del
 // grupo 'catalogo.*' de arriba) ---
+
+// --- Módulo 6 (Excepciones y restricciones) — en construcción, ver
+// Fase 6 - Development/BRIEFING-MODULO-6-EXCEPCIONES-RESTRICCIONES.md ---
+// Acceso: solo Administrador (RN-10: el CRUD de ExcepcionAutorizada — creación, modificación,
+// revocación — está reservado al Administrador; a diferencia de Catálogo/Socios/Préstamos, que
+// también permiten Personal). Único otro grupo con este mismo nivel de restricción es 'admin.*'
+// (Módulo 1).
+Route::middleware(['auth', 'role:administrador'])
+    ->prefix('excepciones')
+    ->name('excepciones.')
+    ->group(function () {
+        Route::get('/', [ExcepcionController::class, 'index'])->name('index');
+        Route::get('nueva', [ExcepcionController::class, 'create'])->name('create');
+        Route::post('/', [ExcepcionController::class, 'store'])->name('store');
+        Route::patch('{excepcion}/revocar', [ExcepcionController::class, 'revocar'])->name('revocar');
+    });
+// --- fin Módulo 6 (paso 3: CRUD de Excepciones Autorizadas) ---

@@ -110,7 +110,7 @@ class PrestamoController extends Controller
         $restriccionVigente = $socio->restricciones()->get()->first(fn ($r) => $r->estaActiva());
         $tieneExcepcionDeExencion = false;
         if ($restriccionVigente) {
-            $tieneExcepcionDeExencion = $this->tieneExcepcionVigente($socio, ExcepcionAutorizada::TIPO_EXENCION_RESTRICCION);
+            $tieneExcepcionDeExencion = ExcepcionAutorizada::vigentePara($socio, ExcepcionAutorizada::TIPO_EXENCION_RESTRICCION);
 
             if (! $tieneExcepcionDeExencion) {
                 return back()->withInput()->withErrors([
@@ -242,7 +242,7 @@ class PrestamoController extends Controller
 
             if ($diasAtraso > 0) {
                 $socio = $prestamo->socio;
-                $tieneExcepcionDeExencion = $this->tieneExcepcionVigente($socio, ExcepcionAutorizada::TIPO_EXENCION_RESTRICCION);
+                $tieneExcepcionDeExencion = ExcepcionAutorizada::vigentePara($socio, ExcepcionAutorizada::TIPO_EXENCION_RESTRICCION);
 
                 // RN-07: Honorario (sujeto_a_restriccion_automatica = false) no recibe restricción,
                 // pero el atraso se registra igual en el historial (mismo criterio de Módulo 3).
@@ -263,7 +263,7 @@ class PrestamoController extends Controller
 
                     RestriccionSocio::create([
                         'socio_id' => $socio->id,
-                        'tipo' => 'automatica',
+                        'tipo' => RestriccionSocio::TIPO_AUTOMATICA,
                         'fecha_inicio' => $fechaDevolucion->toDateString(),
                         'fecha_fin' => $fechaDevolucion->copy()->addDays($diasRestriccion)->toDateString(),
                         'dias_atraso_origen' => $diasAtraso,
@@ -335,15 +335,5 @@ class PrestamoController extends Controller
         });
 
         return back()->with('status', "Préstamo renovado correctamente. Nuevo vencimiento: {$nuevaFechaVencimiento->format('d/m/Y')}.");
-    }
-
-    private function tieneExcepcionVigente(Socio $socio, string $tipo): bool
-    {
-        return ExcepcionAutorizada::query()
-            ->where('entidad_afectada_type', Socio::class)
-            ->where('entidad_afectada_id', $socio->id)
-            ->where('tipo', $tipo)
-            ->get()
-            ->contains(fn (ExcepcionAutorizada $excepcion) => $excepcion->estaVigente());
     }
 }
